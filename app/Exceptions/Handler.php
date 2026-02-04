@@ -22,6 +22,11 @@ class Handler extends ExceptionHandler
         return parent::render($request, $e);
     }
 
+    public function renderApi($request, Throwable $e): JsonResponse
+    {
+        return $this->handleApiException($e);
+    }
+
     private function handleApiException(Throwable $e): JsonResponse
     {
         $response = match (true) {
