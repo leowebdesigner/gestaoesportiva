@@ -30,6 +30,9 @@ install:       ## Composer install + key generate + migrations + seeders
 	docker-compose exec app php artisan migrate --seed
 	docker-compose exec app php artisan storage:link
 
+composer-install: ## Executa composer install no container app
+	docker-compose exec app composer install
+
 migrate:       ## Executa migrations
 	docker-compose exec app php artisan migrate
 
