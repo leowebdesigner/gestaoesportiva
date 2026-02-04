@@ -16,7 +16,6 @@ class TeamFactory extends Factory
         $fullName = $city . ' ' . $name;
 
         return [
-            'external_id' => fake()->unique()->numberBetween(1, 1000000),
             'name' => $name,
             'city' => $city,
             'abbreviation' => strtoupper(fake()->lexify('???')),

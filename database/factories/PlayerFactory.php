@@ -13,7 +13,6 @@ class PlayerFactory extends Factory
     public function definition(): array
     {
         return [
-            'external_id' => fake()->unique()->numberBetween(1, 1000000),
             'team_id' => Team::factory(),
             'first_name' => fake()->firstName(),
             'last_name' => fake()->lastName(),
@@ -21,11 +20,11 @@ class PlayerFactory extends Factory
             'height' => fake()->randomElement(['6-2', '6-7', '7-0']),
             'weight' => fake()->randomElement(['190', '210', '250']),
             'jersey_number' => (string) fake()->numberBetween(0, 99),
-            'college' => fake()->optional()->company(),
+            'college' => fake()->company(),
             'country' => fake()->country(),
-            'draft_year' => fake()->optional()->numberBetween(1990, 2023),
-            'draft_round' => fake()->optional()->numberBetween(1, 2),
-            'draft_number' => fake()->optional()->numberBetween(1, 60),
+            'draft_year' => fake()->numberBetween(1990, 2023),
+            'draft_round' => fake()->numberBetween(1, 2),
+            'draft_number' => fake()->numberBetween(1, 60),
             'is_active' => true,
         ];
     }

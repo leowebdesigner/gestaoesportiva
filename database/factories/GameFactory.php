@@ -13,7 +13,6 @@ class GameFactory extends Factory
     public function definition(): array
     {
         return [
-            'external_id' => fake()->unique()->numberBetween(1, 1000000),
             'home_team_id' => Team::factory(),
             'visitor_team_id' => Team::factory(),
             'home_team_score' => fake()->numberBetween(80, 130),
