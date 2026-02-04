@@ -34,4 +34,5 @@ Acesso:
 make logs
 make shell
 make down
+make migrate-fresh
 ```
