@@ -10,7 +10,9 @@ use App\Services\AuthService;
 use App\Services\GameService;
 use App\Services\PlayerService;
 use App\Services\TeamService;
+use Illuminate\Contracts\Debug\ExceptionHandler as ExceptionHandlerContract;
 use Illuminate\Support\ServiceProvider;
+use App\Exceptions\Handler;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->singleton(ExceptionHandlerContract::class, Handler::class);
         $this->app->bind(PlayerServiceInterface::class, PlayerService::class);
         $this->app->bind(TeamServiceInterface::class, TeamService::class);
         $this->app->bind(GameServiceInterface::class, GameService::class);
