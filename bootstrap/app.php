@@ -17,6 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'x-auth' => \App\Http\Middleware\XAuthorizationMiddleware::class,
             'role' => \App\Http\Middleware\EnsureUserHasRole::class,
+            'ability' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
+            'abilities' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
