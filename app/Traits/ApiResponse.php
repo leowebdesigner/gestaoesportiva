@@ -38,6 +38,25 @@ trait ApiResponse
 
     protected function paginated($paginator, string $message = 'Success'): JsonResponse
     {
+        if ($paginator instanceof \Illuminate\Http\Resources\Json\AnonymousResourceCollection) {
+            $resource = $paginator;
+            $paginator = $resource->resource;
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'data' => $resource->collection,
+                'meta' => array_merge($this->meta(), [
+                    'pagination' => [
+                        'total' => $paginator->total(),
+                        'per_page' => $paginator->perPage(),
+                        'current_page' => $paginator->currentPage(),
+                        'last_page' => $paginator->lastPage(),
+                    ],
+                ]),
+            ]);
+        }
+
         return response()->json([
             'success' => true,
             'message' => $message,
