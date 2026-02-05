@@ -21,9 +21,7 @@ class DeleteTeamTest extends TestCase
 
         $response = $this->deleteJson("/api/v1/teams/{$team->id}");
 
-        $response->assertOk();
-        $response->assertJsonPath('success', true);
-        $response->assertJsonPath('data.deleted', true);
+        $response->assertNoContent();
         $this->assertSoftDeleted('teams', ['id' => $team->id]);
     }
 }
