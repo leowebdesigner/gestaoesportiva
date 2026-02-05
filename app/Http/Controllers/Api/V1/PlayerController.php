@@ -11,7 +11,6 @@ use App\Models\Player;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 class PlayerController extends Controller
 {
@@ -45,9 +44,12 @@ class PlayerController extends Controller
         return $this->success(new PlayerResource($updated));
     }
 
-    public function destroy(Player $player): Response
+    public function destroy(Player $player): JsonResponse
     {
         $this->playerService->delete($player->id);
-        return $this->noContent();
+        return $this->success(
+            ['id' => $player->id, 'deleted' => true],
+            __('messages.player.deleted_success')
+        );
     }
 }

@@ -21,7 +21,10 @@ class PlayerAuthorizationTest extends TestCase
 
         $response = $this->deleteJson("/api/v1/players/{$player->id}");
 
-        $response->assertNoContent();
+        $response->assertOk();
+        $response->assertJsonPath('message', 'Player deleted successfully.');
+        $response->assertJsonPath('data.id', $player->id);
+        $response->assertJsonPath('data.deleted', true);
         $this->assertSoftDeleted('players', ['id' => $player->id]);
     }
 

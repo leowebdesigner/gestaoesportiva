@@ -12,7 +12,6 @@ use App\Traits\ApiResponse;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
 
 class GameController extends Controller
 {
@@ -46,10 +45,13 @@ class GameController extends Controller
         return $this->success(new GameResource($updated));
     }
 
-    public function destroy(Game $game): Response
+    public function destroy(Game $game): JsonResponse
     {
         $this->gameService->delete($game->id);
-        return $this->noContent();
+        return $this->success(
+            ['id' => $game->id, 'deleted' => true],
+            __('messages.game.deleted_success')
+        );
     }
 
     public function bySeason(int $season): JsonResponse

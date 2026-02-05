@@ -49,10 +49,14 @@ class AuthController extends Controller
         ]);
     }
 
-    public function logout(Request $request): Response
+    public function logout(Request $request): JsonResponse|Response
     {
         if ($request->attributes->has('x_auth_token') && $request->hasHeader('X-Authorization')) {
             $this->authService->revokeXToken($request->user(), $request->header('X-Authorization'));
+            return $this->success(
+                ['revoked' => true],
+                __('messages.auth.logout_success')
+            );
         } else {
             $this->authService->logout($request->user());
         }
