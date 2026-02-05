@@ -2,21 +2,6 @@
 
 API RESTful para gerenciamento de dados de basquete (NBA) com integração à API BallDontLie.
 
-## 📋 Índice
-
-- [Sobre o Projeto](#sobre-o-projeto)
-- [Tecnologias](#tecnologias)
-- [Requisitos](#requisitos)
-- [Instalação](#instalação)
-- [Configuração](#configuração)
-- [Executando a Aplicação](#executando-a-aplicação)
-- [Importação de Dados](#importação-de-dados)
-- [Testes](#testes)
-- [Documentação da API](#documentação-da-api)
-- [Estrutura do Projeto](#estrutura-do-projeto)
-- [Autenticação](#autenticação)
-- [Perfis de Acesso](#perfis-de-acesso)
-
 ## 📖 Sobre o Projeto
 
 Esta API foi desenvolvida para gerenciar informações de basquete incluindo:
@@ -81,10 +66,26 @@ Comandos úteis:
 
 ```bash
 make up
+make build
 make down
+make restart
 make logs
 make shell
 make mysql
+make composer-install
+make install
+make migrate
+make migrate-fresh
+make seed
+make cache-clear
+make test
+make test-coverage
+make import-teams
+make import-players
+make import-games
+make import-all
+make optimize
+make swagger
 ```
 
 ## 📥 Importação de Dados
@@ -160,4 +161,3 @@ Usuário:
 - Email: `user@example.com`
 - Senha: `password`
 - Permissões: criar, ler e atualizar (sem delete)
-
