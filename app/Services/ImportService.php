@@ -89,8 +89,8 @@ class ImportService implements ImportServiceInterface
     {
         Bus::chain([
             new ImportTeamsJob(),
-            new ImportPlayersJob(),
             new ImportGamesJob($season),
+            new ImportPlayersJob(),
         ])->catch(function (\Throwable $e) use ($season) {
             Log::error('Full import chain failed', [
                 'season' => $season,

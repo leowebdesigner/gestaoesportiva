@@ -30,9 +30,9 @@ class ImportGamesJob implements ShouldQueue
     ): void {
         $page = 1;
         $perPage = config('balldontlie.pagination.per_page', 100);
-        $teamMap = $importService->getTeamExternalIdMap();
 
         do {
+            $teamMap = $importService->getTeamExternalIdMap();
             $params = [
                 'page' => $page,
                 'per_page' => $perPage,
