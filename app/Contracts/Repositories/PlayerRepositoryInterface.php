@@ -16,4 +16,6 @@ interface PlayerRepositoryInterface extends RepositoryInterface
     public function searchByName(string $term): Collection;
 
     public function upsertFromExternal(array $data): Player;
+
+    public function bulkUpsertFromExternal(array $rows): int;
 }

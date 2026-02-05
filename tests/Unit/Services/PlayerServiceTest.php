@@ -23,7 +23,7 @@ class PlayerServiceTest extends TestCase
         $teamRepo = Mockery::mock(TeamRepositoryInterface::class);
 
         $playerRepo->shouldReceive('with')->andReturnSelf();
-        $playerRepo->shouldReceive('findByUuid')->andReturn(null);
+        $playerRepo->shouldReceive('findById')->andReturn(null);
 
         $service = new PlayerService($playerRepo, $teamRepo);
 
@@ -39,7 +39,7 @@ class PlayerServiceTest extends TestCase
         $team = Team::factory()->make();
         $team->id = '01TESTTEAMID';
 
-        $teamRepo->shouldReceive('findByUuid')->andReturn($team);
+        $teamRepo->shouldReceive('findById')->andReturn($team);
         $playerRepo->shouldReceive('getByTeam')->with('01TESTTEAMID')->andReturn(new Collection());
 
         $service = new PlayerService($playerRepo, $teamRepo);

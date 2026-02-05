@@ -152,6 +152,38 @@ class GameService implements GameServiceInterface
         });
     }
 
+    /**
+     * @param array $gamesData Raw API data for multiple games
+     * @param Collection|null $teamMap Pre-loaded external_id => id map
+     */
+    public function bulkImportFromExternal(array $gamesData, ?Collection $teamMap = null): int
+    {
+        if ($teamMap === null) {
+            $teamMap = $this->teamRepository->getExternalIdMap();
+        }
+
+        $rows = array_map(function (array $g) use ($teamMap) {
+            $homeTeamId = isset($g['home_team']['id']) ? ($teamMap[$g['home_team']['id']] ?? null) : null;
+            $visitorTeamId = isset($g['visitor_team']['id']) ? ($teamMap[$g['visitor_team']['id']] ?? null) : null;
+
+            return [
+                'external_id' => $g['id'] ?? null,
+                'home_team_id' => $homeTeamId,
+                'visitor_team_id' => $visitorTeamId,
+                'home_team_score' => $g['home_team_score'] ?? 0,
+                'visitor_team_score' => $g['visitor_team_score'] ?? 0,
+                'season' => $g['season'] ?? null,
+                'period' => $g['period'] ?? 0,
+                'status' => $g['status'] ?? null,
+                'time' => $g['time'] ?? null,
+                'postseason' => $g['postseason'] ?? false,
+                'game_date' => isset($g['date']) ? Carbon::parse($g['date'])->toDateString() : null,
+            ];
+        }, $gamesData);
+
+        return $this->gameRepository->bulkUpsertFromExternal($rows);
+    }
+
     public function getBySeason(int $season): Collection
     {
         return $this->gameRepository->getBySeason($season);

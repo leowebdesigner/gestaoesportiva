@@ -16,4 +16,11 @@ interface TeamRepositoryInterface extends RepositoryInterface
     public function searchByName(string $term): Collection;
 
     public function upsertFromExternal(array $data): Team;
+
+    /**
+     * @return Collection<int, Team> keyed by external_id
+     */
+    public function getExternalIdMap(): Collection;
+
+    public function bulkUpsertFromExternal(array $rows): int;
 }

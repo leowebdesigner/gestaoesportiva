@@ -158,6 +158,42 @@ class PlayerService implements PlayerServiceInterface
         });
     }
 
+    /**
+     * @param array $playersData Raw API data for multiple players
+     * @param \Illuminate\Support\Collection|null $teamMap Pre-loaded external_id => id map
+     */
+    public function bulkImportFromExternal(array $playersData, ?Collection $teamMap = null): int
+    {
+        if ($teamMap === null) {
+            $teamMap = $this->teamRepository->getExternalIdMap();
+        }
+
+        $rows = array_map(function (array $p) use ($teamMap) {
+            $teamId = null;
+            if (isset($p['team']['id'])) {
+                $teamId = $teamMap[$p['team']['id']] ?? null;
+            }
+
+            return [
+                'external_id' => $p['id'] ?? null,
+                'first_name' => $p['first_name'] ?? null,
+                'last_name' => $p['last_name'] ?? null,
+                'position' => $p['position'] ?? null,
+                'height' => $p['height'] ?? null,
+                'weight' => $p['weight'] ?? null,
+                'jersey_number' => $p['jersey_number'] ?? null,
+                'college' => $p['college'] ?? null,
+                'country' => $p['country'] ?? null,
+                'draft_year' => $p['draft_year'] ?? null,
+                'draft_round' => $p['draft_round'] ?? null,
+                'draft_number' => $p['draft_number'] ?? null,
+                'team_id' => $teamId,
+            ];
+        }, $playersData);
+
+        return $this->playerRepository->bulkUpsertFromExternal($rows);
+    }
+
     public function getByTeam(string $teamId): Collection
     {
         $team = $this->teamRepository->findById($teamId);

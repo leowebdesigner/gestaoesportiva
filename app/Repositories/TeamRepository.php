@@ -40,4 +40,23 @@ class TeamRepository extends BaseRepository implements TeamRepositoryInterface
             $data
         );
     }
+
+    public function getExternalIdMap(): Collection
+    {
+        return $this->model->whereNotNull('external_id')
+            ->pluck('id', 'external_id');
+    }
+
+    public function bulkUpsertFromExternal(array $rows): int
+    {
+        if (empty($rows)) {
+            return 0;
+        }
+
+        return $this->model->upsert(
+            $rows,
+            ['external_id'],
+            ['name', 'city', 'abbreviation', 'conference', 'division', 'full_name']
+        );
+    }
 }

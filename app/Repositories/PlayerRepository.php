@@ -20,12 +20,12 @@ class PlayerRepository extends BaseRepository implements PlayerRepositoryInterfa
 
     public function getByTeam(string $teamId): Collection
     {
-        return $this->model->where('team_id', $teamId)->get();
+        return $this->model->with('team')->where('team_id', $teamId)->get();
     }
 
     public function getActiveByPosition(string $position): Collection
     {
-        return $this->model->active()->byPosition($position)->get();
+        return $this->model->with('team')->active()->byPosition($position)->get();
     }
 
     public function searchByName(string $term): Collection
@@ -38,6 +38,19 @@ class PlayerRepository extends BaseRepository implements PlayerRepositoryInterfa
         return $this->model->updateOrCreate(
             ['external_id' => $data['external_id']],
             $data
+        );
+    }
+
+    public function bulkUpsertFromExternal(array $rows): int
+    {
+        if (empty($rows)) {
+            return 0;
+        }
+
+        return $this->model->upsert(
+            $rows,
+            ['external_id'],
+            ['first_name', 'last_name', 'position', 'height', 'weight', 'jersey_number', 'college', 'country', 'draft_year', 'draft_round', 'draft_number', 'team_id']
         );
     }
 }

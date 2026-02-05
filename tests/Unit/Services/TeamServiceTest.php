@@ -18,7 +18,7 @@ class TeamServiceTest extends TestCase
     public function test_find_throws_when_not_found(): void
     {
         $repo = Mockery::mock(TeamRepositoryInterface::class);
-        $repo->shouldReceive('findByUuid')->andReturn(null);
+        $repo->shouldReceive('findById')->andReturn(null);
 
         $service = new TeamService($repo);
 

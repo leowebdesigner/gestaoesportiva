@@ -25,9 +25,10 @@ class ImportTeamsJob implements ShouldQueue
 
         do {
             $response = $service->fetchTeams($page, $perPage);
-            foreach ($response['data'] as $teamDto) {
-                $teamService->importFromExternal($teamDto->toArray());
-            }
+
+            $teamsData = array_map(fn($dto) => $dto->toArray(), $response['data']);
+            $teamService->bulkImportFromExternal($teamsData);
+
             $page = $response['meta']['next_page'] ?? null;
         } while ($page);
     }

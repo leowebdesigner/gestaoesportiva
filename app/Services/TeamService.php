@@ -122,6 +122,21 @@ class TeamService implements TeamServiceInterface
         return $this->teamRepository->upsertFromExternal($data);
     }
 
+    public function bulkImportFromExternal(array $teamsData): int
+    {
+        $rows = array_map(fn(array $t) => [
+            'external_id' => $t['id'] ?? null,
+            'name' => $t['name'] ?? null,
+            'city' => $t['city'] ?? null,
+            'abbreviation' => $t['abbreviation'] ?? null,
+            'conference' => $t['conference'] ?? null,
+            'division' => $t['division'] ?? null,
+            'full_name' => $t['full_name'] ?? null,
+        ], $teamsData);
+
+        return $this->teamRepository->bulkUpsertFromExternal($rows);
+    }
+
     public function getByConference(string $conference): Collection
     {
         return $this->teamRepository->getByConference($conference);

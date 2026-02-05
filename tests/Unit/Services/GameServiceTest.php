@@ -22,7 +22,7 @@ class GameServiceTest extends TestCase
         $gameRepo = Mockery::mock(GameRepositoryInterface::class);
         $teamRepo = Mockery::mock(TeamRepositoryInterface::class);
 
-        $teamRepo->shouldReceive('findByUuid')->with('home-id')->andReturn(null);
+        $teamRepo->shouldReceive('findById')->with('home-id')->andReturn(null);
 
         $service = new GameService($gameRepo, $teamRepo);
 

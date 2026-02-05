@@ -21,12 +21,12 @@ class GameRepository extends BaseRepository implements GameRepositoryInterface
 
     public function getBySeason(int $season): Collection
     {
-        return $this->model->bySeason($season)->get();
+        return $this->model->with(['homeTeam', 'visitorTeam'])->bySeason($season)->get();
     }
 
     public function getByTeam(string $teamId, ?int $season = null): Collection
     {
-        $query = $this->model->byTeam($teamId);
+        $query = $this->model->with(['homeTeam', 'visitorTeam'])->byTeam($teamId);
 
         if ($season !== null) {
             $query->bySeason($season);
@@ -37,7 +37,7 @@ class GameRepository extends BaseRepository implements GameRepositoryInterface
 
     public function getByDateRange(Carbon $start, Carbon $end): Collection
     {
-        return $this->model->whereBetween('game_date', [$start, $end])->get();
+        return $this->model->with(['homeTeam', 'visitorTeam'])->whereBetween('game_date', [$start, $end])->get();
     }
 
     public function upsertFromExternal(array $data): Game
@@ -45,6 +45,19 @@ class GameRepository extends BaseRepository implements GameRepositoryInterface
         return $this->model->updateOrCreate(
             ['external_id' => $data['external_id']],
             $data
+        );
+    }
+
+    public function bulkUpsertFromExternal(array $rows): int
+    {
+        if (empty($rows)) {
+            return 0;
+        }
+
+        return $this->model->upsert(
+            $rows,
+            ['external_id'],
+            ['home_team_id', 'visitor_team_id', 'home_team_score', 'visitor_team_score', 'season', 'period', 'status', 'time', 'postseason', 'game_date']
         );
     }
 }

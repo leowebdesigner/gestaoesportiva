@@ -17,4 +17,6 @@ interface GameRepositoryInterface extends RepositoryInterface
     public function getByDateRange(Carbon $start, Carbon $end): Collection;
 
     public function upsertFromExternal(array $data): Game;
+
+    public function bulkUpsertFromExternal(array $rows): int;
 }

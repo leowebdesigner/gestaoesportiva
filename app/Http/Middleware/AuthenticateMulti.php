@@ -24,6 +24,11 @@ class AuthenticateMulti
             return $this->authenticateViaSanctum($request, $next);
         }
 
+        // 3) Already authenticated via Sanctum guard (e.g. actingAs in tests)
+        if (Auth::guard('sanctum')->check()) {
+            return $next($request);
+        }
+
         throw new AuthenticationException(__('messages.errors.not_authenticated'));
     }
 

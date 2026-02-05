@@ -9,9 +9,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     // ── Public ──────────────────────────────────────────────
-    Route::post('/auth/register', [AuthController::class, 'register']);
-    Route::post('/auth/login', [AuthController::class, 'login']);         // → Bearer token
-    Route::post('/auth/x-login', [AuthController::class, 'xLogin']);     // → X-Authorization token
+    Route::middleware('throttle:5,1')->group(function () {
+        Route::post('/auth/register', [AuthController::class, 'register']);
+        Route::post('/auth/login', [AuthController::class, 'login']);         // → Bearer token
+        Route::post('/auth/x-login', [AuthController::class, 'xLogin']);     // → X-Authorization token
+    });
 
     // ── Bearer-only (X-Token management) ────────────────────
     Route::middleware('auth:sanctum')->group(function () {
