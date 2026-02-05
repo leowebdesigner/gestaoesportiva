@@ -6,13 +6,15 @@ use Illuminate\Http\JsonResponse;
 
 trait ApiResponse
 {
+    use ApiMeta;
+
     protected function success($data = null, string $message = 'Success', int $code = 200): JsonResponse
     {
         return response()->json([
             'success' => true,
             'message' => $message,
             'data' => $data,
-            'meta' => $this->meta(),
+            'meta' => self::apiMeta(),
         ], $code);
     }
 
@@ -32,7 +34,7 @@ trait ApiResponse
             'success' => false,
             'message' => $message,
             'errors' => $errors,
-            'meta' => $this->meta(),
+            'meta' => self::apiMeta(),
         ], $code);
     }
 
@@ -46,7 +48,7 @@ trait ApiResponse
                 'success' => true,
                 'message' => $message,
                 'data' => $resource->collection,
-                'meta' => array_merge($this->meta(), [
+                'meta' => array_merge(self::apiMeta(), [
                     'pagination' => [
                         'total' => $paginator->total(),
                         'per_page' => $paginator->perPage(),
@@ -61,7 +63,7 @@ trait ApiResponse
             'success' => true,
             'message' => $message,
             'data' => $paginator->items(),
-            'meta' => array_merge($this->meta(), [
+            'meta' => array_merge(self::apiMeta(), [
                 'pagination' => [
                     'total' => $paginator->total(),
                     'per_page' => $paginator->perPage(),
@@ -70,13 +72,5 @@ trait ApiResponse
                 ],
             ]),
         ]);
-    }
-
-    private function meta(): array
-    {
-        return [
-            'timestamp' => now()->toDateTimeString(),
-            'version' => config('app.api_version', '1.0'),
-        ];
     }
 }

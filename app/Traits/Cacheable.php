@@ -11,8 +11,6 @@ trait Cacheable
 
     abstract protected function cacheTtl(): int;
 
-    private int $cacheVersion = 0;
-
     protected function cacheRemember(string $key, Closure $callback): mixed
     {
         $version = $this->getCacheVersion();
