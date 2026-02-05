@@ -9,8 +9,6 @@ use Illuminate\Support\Facades\Http;
 
 class BallDontLieClient implements BallDontLieClientInterface
 {
-    private const BASE_URL = 'https://api.balldontlie.io/v1';
-
     private int $requestCount = 0;
     private float $windowStart;
 
@@ -64,7 +62,7 @@ class BallDontLieClient implements BallDontLieClientInterface
 
     private function baseUrl(): string
     {
-        return rtrim(config('balldontlie.base_url', self::BASE_URL), '/');
+        return rtrim((string) config('balldontlie.base_url'), '/');
     }
 
     private function respectRateLimit(): void
