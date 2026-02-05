@@ -68,14 +68,16 @@ abstract class BaseRepository implements RepositoryInterface
 
     public function with(array $relations): self
     {
-        $this->query = ($this->query ?? $this->model->newQuery())->with($relations);
-        return $this;
+        $clone = clone $this;
+        $clone->query = ($clone->query ?? $clone->model->newQuery())->with($relations);
+        return $clone;
     }
 
     public function filter(array $filters): self
     {
-        $this->query = $this->applyFilters($this->query ?? $this->model->newQuery(), $filters);
-        return $this;
+        $clone = clone $this;
+        $clone->query = $clone->applyFilters($clone->query ?? $clone->model->newQuery(), $filters);
+        return $clone;
     }
 
     public function chunk(int $count, callable $callback): bool

@@ -8,6 +8,11 @@ use Illuminate\Support\Collection;
 
 class TeamRepository extends BaseRepository implements TeamRepositoryInterface
 {
+    protected array $allowedFilters = [
+        'conference',
+        'division',
+        'search',
+    ];
     public function __construct(Team $model)
     {
         parent::__construct($model);

@@ -8,6 +8,14 @@ use Illuminate\Support\Collection;
 
 class PlayerRepository extends BaseRepository implements PlayerRepositoryInterface
 {
+    protected array $allowedFilters = [
+        'team_id',
+        'position',
+        'country',
+        'search',
+        'drafted',
+        'is_active',
+    ];
     public function __construct(Player $model)
     {
         parent::__construct($model);

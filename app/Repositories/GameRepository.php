@@ -9,6 +9,12 @@ use Illuminate\Support\Collection;
 
 class GameRepository extends BaseRepository implements GameRepositoryInterface
 {
+    protected array $allowedFilters = [
+        'season',
+        'team_id',
+        'postseason',
+        'status',
+    ];
     public function __construct(Game $model)
     {
         parent::__construct($model);

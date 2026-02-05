@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\V1\GameController;
 use App\Http\Controllers\Api\V1\ImportController;
 use App\Http\Controllers\Api\V1\PlayerController;
 use App\Http\Controllers\Api\V1\TeamController;
+use App\Http\Controllers\Api\V1\TeamRelationsController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
@@ -63,10 +64,10 @@ Route::prefix('v1')->group(function () {
         Route::delete('/teams/{team}', [TeamController::class, 'destroy'])
             ->middleware('ability:teams:delete,teams:*')
             ->can('delete', 'team');
-        Route::get('/teams/{team}/players', [TeamController::class, 'players'])
+        Route::get('/teams/{team}/players', [TeamRelationsController::class, 'players'])
             ->middleware('ability:players:read,players:*')
             ->can('view', 'team');
-        Route::get('/teams/{team}/games', [TeamController::class, 'games'])
+        Route::get('/teams/{team}/games', [TeamRelationsController::class, 'games'])
             ->middleware('ability:games:read,games:*')
             ->can('view', 'team');
 

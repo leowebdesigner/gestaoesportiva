@@ -50,26 +50,15 @@ class TeamController extends Controller
         return $this->noContent();
     }
 
-    /**
-     * Get teams by conference.
-     */
     public function byConference(string $conference): JsonResponse
     {
         $teams = $this->teamService->getByConference($conference);
         return $this->success(TeamResource::collection($teams));
     }
 
-    /**
-     * Get teams by division.
-     */
     public function byDivision(string $division): JsonResponse
     {
         $teams = $this->teamService->getByDivision($division);
         return $this->success(TeamResource::collection($teams));
     }
-
-    /**
-     * Get all games for a team.
-     */
-    //
 }
