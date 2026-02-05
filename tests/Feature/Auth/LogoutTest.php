@@ -18,8 +18,6 @@ class LogoutTest extends TestCase
 
         $response = $this->postJson('/api/v1/auth/logout');
 
-        $response->assertOk();
-        $response->assertJsonPath('success', true);
-        $response->assertJsonPath('data.revoked', true);
+        $response->assertNoContent();
     }
 }
