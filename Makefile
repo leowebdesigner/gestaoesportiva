@@ -1,5 +1,5 @@
-.PHONY: up down build restart logs shell mysql install migrate migrate-fresh seed cache-clear test test-coverage \
-	import-teams import-players import-games import-all optimize swagger
+.PHONY: up down build restart logs shell mysql install migrate migrate-fresh migrate-fresh-no-seed seed seed-users cache-clear test test-coverage \
+	import-teams import-players import-games import-all optimize swagger horizon queue-work
 
 # Comandos Docker
 up:            ## Sobe os containers
@@ -11,8 +11,17 @@ down:          ## Para os containers
 build:         ## Build dos containers
 	docker-compose build
 
+build-no-cache: ## Build sem cache
+	docker-compose build --no-cache
+
 restart:       ## Reinicia containers
 	docker-compose down && docker-compose up -d
+
+restart-redis: ## Reinicia apenas o Redis
+	docker-compose restart redis
+
+restart-queue: ## Reinicia apenas o worker (Horizon)
+	docker-compose restart queue
 
 logs:          ## Visualiza logs
 	docker-compose logs -f
@@ -30,14 +39,23 @@ install:       ## Composer install + key generate + migrations + seeders
 	docker-compose exec app php artisan migrate --seed
 	docker-compose exec app php artisan storage:link
 
+composer-install: ## Executa composer install no container app
+	docker-compose exec app composer install
+
 migrate:       ## Executa migrations
 	docker-compose exec app php artisan migrate
 
 migrate-fresh: ## Fresh migrations com seeders
 	docker-compose exec app php artisan migrate:fresh --seed
 
+migrate-fresh-no-seed: ## Fresh migrations sem seeders
+	docker-compose exec app php artisan migrate:fresh
+
 seed:          ## Executa seeders
 	docker-compose exec app php artisan db:seed
+
+seed-users:    ## Executa somente o UserSeeder
+	docker-compose exec app php artisan db:seed --class=UserSeeder
 
 cache-clear:   ## Limpa todos os caches
 	docker-compose exec app php artisan optimize:clear
@@ -67,3 +85,9 @@ optimize:      ## Otimiza a aplicação
 
 swagger:       ## Gera documentação Swagger
 	docker-compose exec app php artisan l5-swagger:generate
+
+horizon:       ## Inicia o Horizon (requer Redis)
+	docker-compose exec app php artisan horizon
+
+queue-work:    ## Inicia o worker de fila (database/redis)
+	docker-compose exec app php artisan queue:work
