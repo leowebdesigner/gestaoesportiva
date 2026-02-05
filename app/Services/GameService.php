@@ -3,9 +3,7 @@
 namespace App\Services;
 
 use App\Contracts\Repositories\GameRepositoryInterface;
-use App\Contracts\Repositories\TeamRepositoryInterface;
 use App\Contracts\Services\GameServiceInterface;
-use App\Exceptions\BusinessException;
 use App\Exceptions\NotFoundException;
 use App\Models\Game;
 use App\Traits\Cacheable;
@@ -20,8 +18,7 @@ class GameService implements GameServiceInterface
     use Cacheable;
 
     public function __construct(
-        private GameRepositoryInterface $gameRepository,
-        private TeamRepositoryInterface $teamRepository
+        private GameRepositoryInterface $gameRepository
     ) {}
 
     protected function cachePrefix(): string
@@ -63,125 +60,52 @@ class GameService implements GameServiceInterface
 
     public function create(array $data): Game
     {
-        return DB::transaction(function () use ($data) {
-            $data = $this->resolveTeamIds($data);
-
+        $game = DB::transaction(function () use ($data) {
             $game = $this->gameRepository->create($data);
-
-            $this->cacheClearPrefix();
-
-            Log::info('Game created', ['game_id' => $game->id]);
-
             return $game->load(['homeTeam', 'visitorTeam']);
         });
+
+        $this->cacheClearPrefix();
+        Log::info('Game created', ['game_id' => $game->id]);
+
+        return $game;
     }
 
     public function update(string $id, array $data): Game
     {
-        return DB::transaction(function () use ($id, $data) {
-            $game = $this->gameRepository->findById($id);
+        $game = $this->gameRepository->findById($id);
 
-            if (!$game) {
-                throw new NotFoundException(__('messages.game.not_found'));
-            }
+        if (!$game) {
+            throw new NotFoundException(__('messages.game.not_found'));
+        }
 
-            $data = $this->resolveTeamIds($data);
-
+        $game = DB::transaction(function () use ($game, $data) {
             $game = $this->gameRepository->update($game->id, $data);
-
-            $this->cacheForgetItem($id);
-            $this->cacheClearPrefix();
-
-            Log::info('Game updated', ['game_id' => $game->id]);
-
             return $game->load(['homeTeam', 'visitorTeam']);
         });
+
+        $this->cacheForgetItem($id);
+        $this->cacheClearPrefix();
+        Log::info('Game updated', ['game_id' => $game->id]);
+
+        return $game;
     }
 
     public function delete(string $id): bool
     {
-        return DB::transaction(function () use ($id) {
-            $game = $this->gameRepository->findById($id);
+        $game = $this->gameRepository->findById($id);
 
-            if (!$game) {
-                throw new NotFoundException(__('messages.game.not_found'));
-            }
-
-            $result = $this->gameRepository->delete($game->id);
-
-            $this->cacheForgetItem($id);
-            $this->cacheClearPrefix();
-
-            Log::info('Game deleted', ['game_id' => $game->id]);
-
-            return $result;
-        });
-    }
-
-    public function importFromExternal(array $externalData): Game
-    {
-        return DB::transaction(function () use ($externalData) {
-            $homeTeamId = null;
-            $visitorTeamId = null;
-
-            if (isset($externalData['home_team']['id'])) {
-                $homeTeam = $this->teamRepository->findByExternalId($externalData['home_team']['id']);
-                $homeTeamId = $homeTeam?->id;
-            }
-
-            if (isset($externalData['visitor_team']['id'])) {
-                $visitorTeam = $this->teamRepository->findByExternalId($externalData['visitor_team']['id']);
-                $visitorTeamId = $visitorTeam?->id;
-            }
-
-            $data = [
-                'external_id' => $externalData['id'] ?? null,
-                'home_team_id' => $homeTeamId,
-                'visitor_team_id' => $visitorTeamId,
-                'home_team_score' => $externalData['home_team_score'] ?? 0,
-                'visitor_team_score' => $externalData['visitor_team_score'] ?? 0,
-                'season' => $externalData['season'] ?? null,
-                'period' => $externalData['period'] ?? 0,
-                'status' => $externalData['status'] ?? null,
-                'time' => $externalData['time'] ?? null,
-                'postseason' => $externalData['postseason'] ?? false,
-                'game_date' => isset($externalData['date']) ? Carbon::parse($externalData['date'])->toDateString() : null,
-            ];
-
-            return $this->gameRepository->upsertFromExternal($data);
-        });
-    }
-
-    /**
-     * @param array $gamesData Raw API data for multiple games
-     * @param Collection|null $teamMap Pre-loaded external_id => id map
-     */
-    public function bulkImportFromExternal(array $gamesData, ?Collection $teamMap = null): int
-    {
-        if ($teamMap === null) {
-            $teamMap = $this->teamRepository->getExternalIdMap();
+        if (!$game) {
+            throw new NotFoundException(__('messages.game.not_found'));
         }
 
-        $rows = array_map(function (array $g) use ($teamMap) {
-            $homeTeamId = isset($g['home_team']['id']) ? ($teamMap[$g['home_team']['id']] ?? null) : null;
-            $visitorTeamId = isset($g['visitor_team']['id']) ? ($teamMap[$g['visitor_team']['id']] ?? null) : null;
+        $result = $this->gameRepository->delete($game->id);
 
-            return [
-                'external_id' => $g['id'] ?? null,
-                'home_team_id' => $homeTeamId,
-                'visitor_team_id' => $visitorTeamId,
-                'home_team_score' => $g['home_team_score'] ?? 0,
-                'visitor_team_score' => $g['visitor_team_score'] ?? 0,
-                'season' => $g['season'] ?? null,
-                'period' => $g['period'] ?? 0,
-                'status' => $g['status'] ?? null,
-                'time' => $g['time'] ?? null,
-                'postseason' => $g['postseason'] ?? false,
-                'game_date' => isset($g['date']) ? Carbon::parse($g['date'])->toDateString() : null,
-            ];
-        }, $gamesData);
+        $this->cacheForgetItem($id);
+        $this->cacheClearPrefix();
+        Log::info('Game deleted', ['game_id' => $game->id]);
 
-        return $this->gameRepository->bulkUpsertFromExternal($rows);
+        return $result;
     }
 
     public function getBySeason(int $season): Collection
@@ -197,27 +121,6 @@ class GameService implements GameServiceInterface
     public function getByDateRange(Carbon $start, Carbon $end): Collection
     {
         return $this->gameRepository->getByDateRange($start, $end);
-    }
-
-    private function resolveTeamIds(array $data): array
-    {
-        if (isset($data['home_team_id'])) {
-            $homeTeam = $this->teamRepository->findById($data['home_team_id']);
-            if (!$homeTeam) {
-                throw new BusinessException(__('messages.game.home_team_not_found'), 'HOME_TEAM_NOT_FOUND');
-            }
-            $data['home_team_id'] = $homeTeam->id;
-        }
-
-        if (isset($data['visitor_team_id'])) {
-            $visitorTeam = $this->teamRepository->findById($data['visitor_team_id']);
-            if (!$visitorTeam) {
-                throw new BusinessException(__('messages.game.visitor_team_not_found'), 'VISITOR_TEAM_NOT_FOUND');
-            }
-            $data['visitor_team_id'] = $visitorTeam->id;
-        }
-
-        return $data;
     }
 
 }

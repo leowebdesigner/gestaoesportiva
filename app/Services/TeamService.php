@@ -56,85 +56,51 @@ class TeamService implements TeamServiceInterface
 
     public function create(array $data): Team
     {
-        return DB::transaction(function () use ($data) {
-            $team = $this->teamRepository->create($data);
-
-            $this->cacheClearPrefix();
-
-            Log::info('Team created', ['team_id' => $team->id]);
-
-            return $team;
+        $team = DB::transaction(function () use ($data) {
+            return $this->teamRepository->create($data);
         });
+
+        $this->cacheClearPrefix();
+        Log::info('Team created', ['team_id' => $team->id]);
+
+        return $team;
     }
 
     public function update(string $id, array $data): Team
     {
-        return DB::transaction(function () use ($id, $data) {
-            $team = $this->teamRepository->findById($id);
+        $team = $this->teamRepository->findById($id);
 
-            if (!$team) {
-                throw new NotFoundException(__('messages.team.not_found'));
-            }
+        if (!$team) {
+            throw new NotFoundException(__('messages.team.not_found'));
+        }
 
+        $team = DB::transaction(function () use ($team, $data) {
             $team = $this->teamRepository->update($team->id, $data);
-
-            $this->cacheForgetItem($id);
-            $this->cacheClearPrefix();
-
-            Log::info('Team updated', ['team_id' => $team->id]);
-
             return $team;
         });
+
+        $this->cacheForgetItem($id);
+        $this->cacheClearPrefix();
+        Log::info('Team updated', ['team_id' => $team->id]);
+
+        return $team;
     }
 
     public function delete(string $id): bool
     {
-        return DB::transaction(function () use ($id) {
-            $team = $this->teamRepository->findById($id);
+        $team = $this->teamRepository->findById($id);
 
-            if (!$team) {
-                throw new NotFoundException(__('messages.team.not_found'));
-            }
+        if (!$team) {
+            throw new NotFoundException(__('messages.team.not_found'));
+        }
 
-            $result = $this->teamRepository->delete($team->id);
+        $result = $this->teamRepository->delete($team->id);
 
-            $this->cacheForgetItem($id);
-            $this->cacheClearPrefix();
+        $this->cacheForgetItem($id);
+        $this->cacheClearPrefix();
+        Log::info('Team deleted', ['team_id' => $team->id]);
 
-            Log::info('Team deleted', ['team_id' => $team->id]);
-
-            return $result;
-        });
-    }
-
-    public function importFromExternal(array $externalData): Team
-    {
-        $data = [
-            'external_id' => $externalData['id'] ?? null,
-            'name' => $externalData['name'] ?? null,
-            'city' => $externalData['city'] ?? null,
-            'abbreviation' => $externalData['abbreviation'] ?? null,
-            'conference' => $externalData['conference'] ?? null,
-            'division' => $externalData['division'] ?? null,
-            'full_name' => $externalData['full_name'] ?? null,
-        ];
-
-        return $this->teamRepository->upsertFromExternal($data);
-    }
-
-    public function bulkImportFromExternal(array $teamsData): int
-    {
-        $rows = array_map(fn(array $t) => [
-            'external_id' => $t['id'] ?? null,
-            'name' => $t['name'] ?? null,
-            'city' => $t['city'] ?? null,
-            'abbreviation' => $t['abbreviation'] ?? null,
-            'conference' => $t['conference'] ?? null,
-            'division' => $t['division'] ?? null,
-            'full_name' => $t['full_name'] ?? null,
-        ], $teamsData);
-
-        return $this->teamRepository->bulkUpsertFromExternal($rows);
+        return $result;
     }
 
     public function getByConference(string $conference): Collection
@@ -147,11 +113,4 @@ class TeamService implements TeamServiceInterface
         return $this->teamRepository->getByDivision($division);
     }
 
-    /**
-     * Get a map of external IDs to internal IDs.
-     */
-    public function getExternalIdMap(): Collection
-    {
-        return $this->teamRepository->getExternalIdMap();
-    }
 }

@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Contracts\Services\TeamServiceInterface;
+use App\Contracts\Services\ImportServiceInterface;
 use App\External\BallDontLie\Contracts\BallDontLieServiceInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -18,7 +18,7 @@ class ImportTeamsJob implements ShouldQueue
     public int $backoff = 60;
     public int $timeout = 3600;
 
-    public function handle(BallDontLieServiceInterface $service, TeamServiceInterface $teamService): void
+    public function handle(BallDontLieServiceInterface $service, ImportServiceInterface $importService): void
     {
         $page = 1;
         $perPage = config('balldontlie.pagination.per_page', 100);
@@ -27,7 +27,7 @@ class ImportTeamsJob implements ShouldQueue
             $response = $service->fetchTeams($page, $perPage);
 
             $teamsData = array_map(fn($dto) => $dto->toArray(), $response['data']);
-            $teamService->bulkImportFromExternal($teamsData);
+            $importService->bulkUpsertTeamsFromExternal($teamsData);
 
             $page = $response['meta']['next_page'] ?? null;
         } while ($page);

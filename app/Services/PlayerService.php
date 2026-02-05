@@ -62,136 +62,68 @@ class PlayerService implements PlayerServiceInterface
 
     public function create(array $data): Player
     {
-        return DB::transaction(function () use ($data) {
-            if (isset($data['team_id'])) {
-                $team = $this->teamRepository->findById($data['team_id']);
-                if (!$team) {
-                    throw new BusinessException(__('messages.team.not_found'), 'TEAM_NOT_FOUND');
-                }
-                $data['team_id'] = $team->id;
+        if (isset($data['team_id'])) {
+            $team = $this->teamRepository->findById($data['team_id']);
+            if (!$team) {
+                throw new BusinessException(__('messages.team.not_found'), 'TEAM_NOT_FOUND');
             }
+            $data['team_id'] = $team->id;
+        }
 
+        $player = DB::transaction(function () use ($data) {
             $player = $this->playerRepository->create($data);
-
-            $this->cacheClearPrefix();
-
-            Log::info('Player created', ['player_id' => $player->id]);
-
             return $player->load('team');
         });
+
+        $this->cacheClearPrefix();
+        Log::info('Player created', ['player_id' => $player->id]);
+
+        return $player;
     }
 
     public function update(string $id, array $data): Player
     {
-        return DB::transaction(function () use ($id, $data) {
-            $player = $this->playerRepository->findById($id);
+        $player = $this->playerRepository->findById($id);
 
-            if (!$player) {
-                throw new NotFoundException(__('messages.player.not_found'));
+        if (!$player) {
+            throw new NotFoundException(__('messages.player.not_found'));
+        }
+
+        if (isset($data['team_id'])) {
+            $team = $this->teamRepository->findById($data['team_id']);
+            if (!$team) {
+                throw new BusinessException(__('messages.team.not_found'), 'TEAM_NOT_FOUND');
             }
+            $data['team_id'] = $team->id;
+        }
 
-            if (isset($data['team_id'])) {
-                $team = $this->teamRepository->findById($data['team_id']);
-                if (!$team) {
-                    throw new BusinessException(__('messages.team.not_found'), 'TEAM_NOT_FOUND');
-                }
-                $data['team_id'] = $team->id;
-            }
-
+        $player = DB::transaction(function () use ($player, $data) {
             $player = $this->playerRepository->update($player->id, $data);
-
-            $this->cacheForgetItem($id);
-            $this->cacheClearPrefix();
-
-            Log::info('Player updated', ['player_id' => $player->id]);
-
             return $player->load('team');
         });
+
+        $this->cacheForgetItem($id);
+        $this->cacheClearPrefix();
+        Log::info('Player updated', ['player_id' => $player->id]);
+
+        return $player;
     }
 
     public function delete(string $id): bool
     {
-        return DB::transaction(function () use ($id) {
-            $player = $this->playerRepository->findById($id);
+        $player = $this->playerRepository->findById($id);
 
-            if (!$player) {
-                throw new NotFoundException(__('messages.player.not_found'));
-            }
-
-            $result = $this->playerRepository->delete($player->id);
-
-            $this->cacheForgetItem($id);
-            $this->cacheClearPrefix();
-
-            Log::info('Player deleted', ['player_id' => $player->id]);
-
-            return $result;
-        });
-    }
-
-    public function importFromExternal(array $externalData): Player
-    {
-        return DB::transaction(function () use ($externalData) {
-            $teamId = null;
-            if (isset($externalData['team']['id'])) {
-                $team = $this->teamRepository->findByExternalId($externalData['team']['id']);
-                $teamId = $team?->id;
-            }
-
-            $playerData = [
-                'external_id' => $externalData['id'] ?? null,
-                'first_name' => $externalData['first_name'] ?? null,
-                'last_name' => $externalData['last_name'] ?? null,
-                'position' => $externalData['position'] ?? null,
-                'height' => $externalData['height'] ?? null,
-                'weight' => $externalData['weight'] ?? null,
-                'jersey_number' => $externalData['jersey_number'] ?? null,
-                'college' => $externalData['college'] ?? null,
-                'country' => $externalData['country'] ?? null,
-                'draft_year' => $externalData['draft_year'] ?? null,
-                'draft_round' => $externalData['draft_round'] ?? null,
-                'draft_number' => $externalData['draft_number'] ?? null,
-                'team_id' => $teamId,
-            ];
-
-            return $this->playerRepository->upsertFromExternal($playerData);
-        });
-    }
-
-    /**
-     * @param array $playersData Raw API data for multiple players
-     * @param \Illuminate\Support\Collection|null $teamMap Pre-loaded external_id => id map
-     */
-    public function bulkImportFromExternal(array $playersData, ?Collection $teamMap = null): int
-    {
-        if ($teamMap === null) {
-            $teamMap = $this->teamRepository->getExternalIdMap();
+        if (!$player) {
+            throw new NotFoundException(__('messages.player.not_found'));
         }
 
-        $rows = array_map(function (array $p) use ($teamMap) {
-            $teamId = null;
-            if (isset($p['team']['id'])) {
-                $teamId = $teamMap[$p['team']['id']] ?? null;
-            }
+        $result = $this->playerRepository->delete($player->id);
 
-            return [
-                'external_id' => $p['id'] ?? null,
-                'first_name' => $p['first_name'] ?? null,
-                'last_name' => $p['last_name'] ?? null,
-                'position' => $p['position'] ?? null,
-                'height' => $p['height'] ?? null,
-                'weight' => $p['weight'] ?? null,
-                'jersey_number' => $p['jersey_number'] ?? null,
-                'college' => $p['college'] ?? null,
-                'country' => $p['country'] ?? null,
-                'draft_year' => $p['draft_year'] ?? null,
-                'draft_round' => $p['draft_round'] ?? null,
-                'draft_number' => $p['draft_number'] ?? null,
-                'team_id' => $teamId,
-            ];
-        }, $playersData);
+        $this->cacheForgetItem($id);
+        $this->cacheClearPrefix();
+        Log::info('Player deleted', ['player_id' => $player->id]);
 
-        return $this->playerRepository->bulkUpsertFromExternal($rows);
+        return $result;
     }
 
     public function getByTeam(string $teamId): Collection
