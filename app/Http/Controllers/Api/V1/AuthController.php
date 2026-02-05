@@ -6,6 +6,7 @@ use App\Contracts\Services\AuthServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\RevokeXTokenRequest;
 use App\Http\Resources\UserResource;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
@@ -37,6 +38,16 @@ class AuthController extends Controller
         ]);
     }
 
+    public function xLogin(LoginRequest $request): JsonResponse
+    {
+        $result = $this->authService->loginForXAuth($request->validated());
+        return $this->success([
+            'user' => new UserResource($result['user']),
+            'x_token' => $result['x_token']->plain_text_token,
+            'expires_at' => $result['x_token']->expires_at?->toDateTimeString(),
+        ]);
+    }
+
     public function logout(Request $request): JsonResponse
     {
         $this->authService->logout($request->user());
@@ -61,14 +72,9 @@ class AuthController extends Controller
         ]);
     }
 
-    public function revokeXToken(Request $request): JsonResponse
+    public function revokeXToken(RevokeXTokenRequest $request): JsonResponse
     {
-        $token = (string) $request->input('token', '');
-        if ($token === '') {
-            return $this->error(__('messages.auth.token_required'), 422);
-        }
-
-        $revoked = $this->authService->revokeXToken($request->user(), $token);
+        $revoked = $this->authService->revokeXToken($request->user(), $request->validated('token'));
 
         return $this->success(['revoked' => $revoked]);
     }

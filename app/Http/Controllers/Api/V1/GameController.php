@@ -7,11 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Game\StoreGameRequest;
 use App\Http\Requests\Game\UpdateGameRequest;
 use App\Http\Resources\GameResource;
+use App\Models\Game;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use App\Models\Game;
-use Illuminate\Support\Facades\Gate;
 
 class GameController extends Controller
 {
@@ -23,7 +22,6 @@ class GameController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        Gate::authorize('viewAny', \App\Models\Game::class);
         $games = $this->gameService->list($request->query(), (int) $request->get('per_page', 15));
         return $this->paginated(GameResource::collection($games));
     }
@@ -36,26 +34,19 @@ class GameController extends Controller
 
     public function show(Game $game): JsonResponse
     {
-        $gameModel = $this->gameService->find($game->id);
-        Gate::authorize('view', $gameModel);
-        return $this->success(new GameResource($gameModel));
+        $game = $this->gameService->find($game->id);
+        return $this->success(new GameResource($game));
     }
 
     public function update(UpdateGameRequest $request, Game $game): JsonResponse
     {
-        $gameModel = $this->gameService->update($game->id, $request->validated());
-        return $this->success(new GameResource($gameModel));
+        $updated = $this->gameService->update($game->id, $request->validated());
+        return $this->success(new GameResource($updated));
     }
 
     public function destroy(Game $game): JsonResponse
     {
-        $gameModel = $this->gameService->find($game->id);
-        Gate::authorize('delete', $gameModel);
-        $deleted = $this->gameService->delete($game->id);
-
-        return $this->success(
-            ['deleted' => $deleted],
-            __('messages.game.deleted_success')
-        );
+        $this->gameService->delete($game->id);
+        return $this->noContent();
     }
 }

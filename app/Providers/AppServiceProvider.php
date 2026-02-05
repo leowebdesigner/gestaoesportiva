@@ -4,10 +4,12 @@ namespace App\Providers;
 
 use App\Contracts\Services\AuthServiceInterface;
 use App\Contracts\Services\GameServiceInterface;
+use App\Contracts\Services\ImportServiceInterface;
 use App\Contracts\Services\PlayerServiceInterface;
 use App\Contracts\Services\TeamServiceInterface;
 use App\Services\AuthService;
 use App\Services\GameService;
+use App\Services\ImportService;
 use App\Services\PlayerService;
 use App\Services\TeamService;
 use Illuminate\Contracts\Debug\ExceptionHandler as ExceptionHandlerContract;
@@ -26,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(TeamServiceInterface::class, TeamService::class);
         $this->app->bind(GameServiceInterface::class, GameService::class);
         $this->app->bind(AuthServiceInterface::class, AuthService::class);
+        $this->app->bind(ImportServiceInterface::class, ImportService::class);
     }
 
     /**

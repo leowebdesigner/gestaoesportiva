@@ -9,11 +9,10 @@ use App\Http\Requests\Team\StoreTeamRequest;
 use App\Http\Requests\Team\UpdateTeamRequest;
 use App\Http\Resources\PlayerResource;
 use App\Http\Resources\TeamResource;
+use App\Models\Team;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use App\Models\Team;
-use Illuminate\Support\Facades\Gate;
 
 class TeamController extends Controller
 {
@@ -26,7 +25,6 @@ class TeamController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        Gate::authorize('viewAny', \App\Models\Team::class);
         $teams = $this->teamService->list($request->query(), (int) $request->get('per_page', 15));
         return $this->paginated(TeamResource::collection($teams));
     }
@@ -39,27 +37,20 @@ class TeamController extends Controller
 
     public function show(Team $team): JsonResponse
     {
-        $teamModel = $this->teamService->find($team->id);
-        Gate::authorize('view', $teamModel);
-        return $this->success(new TeamResource($teamModel));
+        $team = $this->teamService->find($team->id);
+        return $this->success(new TeamResource($team));
     }
 
     public function update(UpdateTeamRequest $request, Team $team): JsonResponse
     {
-        $teamModel = $this->teamService->update($team->id, $request->validated());
-        return $this->success(new TeamResource($teamModel));
+        $updated = $this->teamService->update($team->id, $request->validated());
+        return $this->success(new TeamResource($updated));
     }
 
     public function destroy(Team $team): JsonResponse
     {
-        $teamModel = $this->teamService->find($team->id);
-        Gate::authorize('delete', $teamModel);
-        $deleted = $this->teamService->delete($team->id);
-
-        return $this->success(
-            ['deleted' => $deleted],
-            __('messages.team.deleted_success')
-        );
+        $this->teamService->delete($team->id);
+        return $this->noContent();
     }
 
     public function players(Team $team): JsonResponse

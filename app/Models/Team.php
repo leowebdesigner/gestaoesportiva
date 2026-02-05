@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Builder;
 
 class Team extends BaseModel
 {
@@ -18,6 +18,10 @@ class Team extends BaseModel
         'conference',
         'division',
         'full_name',
+    ];
+
+    protected $casts = [
+        'external_id' => 'integer',
     ];
 
     public function players(): HasMany
@@ -35,12 +39,9 @@ class Team extends BaseModel
         return $this->hasMany(Game::class, 'visitor_team_id');
     }
 
-    public function allGames()
+    public function allGames(): Builder
     {
-        return Game::query()->where(function ($query) {
-            $query->where('home_team_id', $this->id)
-                ->orWhere('visitor_team_id', $this->id);
-        });
+        return Game::query()->byTeam($this->id);
     }
 
     public function scopeByConference(Builder $query, string $conference): Builder

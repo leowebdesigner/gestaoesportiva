@@ -7,11 +7,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Player\StorePlayerRequest;
 use App\Http\Requests\Player\UpdatePlayerRequest;
 use App\Http\Resources\PlayerResource;
+use App\Models\Player;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use App\Models\Player;
-use Illuminate\Support\Facades\Gate;
 
 class PlayerController extends Controller
 {
@@ -23,7 +22,6 @@ class PlayerController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        Gate::authorize('viewAny', \App\Models\Player::class);
         $players = $this->playerService->list($request->query(), (int) $request->get('per_page', 15));
         return $this->paginated(PlayerResource::collection($players));
     }
@@ -36,26 +34,19 @@ class PlayerController extends Controller
 
     public function show(Player $player): JsonResponse
     {
-        $playerModel = $this->playerService->find($player->id);
-        Gate::authorize('view', $playerModel);
-        return $this->success(new PlayerResource($playerModel));
+        $player = $this->playerService->find($player->id);
+        return $this->success(new PlayerResource($player));
     }
 
     public function update(UpdatePlayerRequest $request, Player $player): JsonResponse
     {
-        $playerModel = $this->playerService->update($player->id, $request->validated());
-        return $this->success(new PlayerResource($playerModel));
+        $updated = $this->playerService->update($player->id, $request->validated());
+        return $this->success(new PlayerResource($updated));
     }
 
     public function destroy(Player $player): JsonResponse
     {
-        $playerModel = $this->playerService->find($player->id);
-        Gate::authorize('delete', $playerModel);
-        $deleted = $this->playerService->delete($player->id);
-
-        return $this->success(
-            ['deleted' => $deleted],
-            __('messages.player.deleted_success')
-        );
+        $this->playerService->delete($player->id);
+        return $this->noContent();
     }
 }

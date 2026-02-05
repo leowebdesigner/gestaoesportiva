@@ -25,6 +25,11 @@ class Game extends BaseModel
     ];
 
     protected $casts = [
+        'external_id' => 'integer',
+        'home_team_score' => 'integer',
+        'visitor_team_score' => 'integer',
+        'season' => 'integer',
+        'period' => 'integer',
         'postseason' => 'boolean',
         'game_date' => 'date',
     ];

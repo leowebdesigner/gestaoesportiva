@@ -31,14 +31,9 @@ abstract class BaseRepository implements RepositoryInterface
         return $this->newQuery()->paginate($perPage, $columns);
     }
 
-    public function find(string $id, array $columns = ['*']): ?Model
+    public function findById(string $id, array $columns = ['*']): ?Model
     {
         return $this->newQuery()->find($id, $columns);
-    }
-
-    public function findByUuid(string $uuid, array $columns = ['*']): ?Model
-    {
-        return $this->newQuery()->where('id', $uuid)->first($columns);
     }
 
     public function findOrFail(string $id, array $columns = ['*']): Model
