@@ -30,8 +30,6 @@ return [
         'deleted_success' => 'Game deleted successfully.',
         'delete_forbidden' => 'Only administrators can delete games.',
         'not_found' => 'Game not found.',
-        'home_team_not_found' => 'Home team not found.',
-        'visitor_team_not_found' => 'Visitor team not found.',
     ],
     'import' => [
         'forbidden' => 'Only administrators can import data.',
