@@ -76,7 +76,9 @@ make composer-install
 make install
 make migrate
 make migrate-fresh
+make migrate-fresh-no-seed
 make seed
+make seed-users
 make cache-clear
 make test
 make test-coverage
@@ -86,6 +88,8 @@ make import-games
 make import-all
 make optimize
 make swagger
+make queue-work
+make horizon
 ```
 
 ## 📥 Importação de Dados
@@ -161,6 +165,21 @@ curl -X POST http://localhost:8000/api/v1/auth/x-login \
 ```bash
 curl http://localhost:8000/api/v1/players \
   -H "X-Authorization: {x_token}"
+```
+
+## 🧵 Filas e Horizon
+
+O worker de filas sobe automaticamente junto com o `make up` (container `queue`).
+Se precisar reiniciar manualmente:
+
+```bash
+make restart-queue
+```
+
+A interface do Horizon fica em:
+
+```
+http://localhost/horizon
 ```
 
 ## 👥 Perfis de Acesso
