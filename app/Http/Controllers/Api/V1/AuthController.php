@@ -60,7 +60,12 @@ class AuthController extends Controller
 
     public function revokeXToken(Request $request): JsonResponse
     {
-        $revoked = $this->authService->revokeXToken($request->user(), $request->get('token'));
+        $token = (string) $request->input('token', '');
+        if ($token === '') {
+            return $this->error('Token é obrigatório.', 422);
+        }
+
+        $revoked = $this->authService->revokeXToken($request->user(), $token);
 
         return $this->success(['revoked' => $revoked]);
     }
