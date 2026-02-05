@@ -52,18 +52,12 @@ class GameController extends Controller
         return $this->noContent();
     }
 
-    /**
-     * Get games by season.
-     */
     public function bySeason(int $season): JsonResponse
     {
         $games = $this->gameService->getBySeason($season);
         return $this->success(GameResource::collection($games));
     }
 
-    /**
-     * Get games by date range.
-     */
     public function byDateRange(Request $request): JsonResponse
     {
         $request->validate([
