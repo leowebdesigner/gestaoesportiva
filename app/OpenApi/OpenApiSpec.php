@@ -4,10 +4,10 @@ namespace App\OpenApi;
 
 use OpenApi\Attributes as OA;
 
-#[OA\Info(version: '1.0.0', title: 'Basketball API - Laravel 12', description: 'API RESTful para gerenciamento de dados de basquete. Suporta autenticacao via Bearer Token (Sanctum) ou X-Authorization (sistemas externos).')]
+#[OA\Info(version: '1.0.0', title: 'Basketball API - Laravel 12', description: 'RESTful API for basketball data management. Supports Bearer Token (Sanctum) or X-Authorization authentication.')]
 #[OA\Server(url: 'http://localhost:8000', description: 'Local server')]
-#[OA\SecurityScheme(securityScheme: 'sanctum', type: 'http', scheme: 'bearer', bearerFormat: 'Token', description: 'Bearer token via Sanctum (login padrao)')]
-#[OA\SecurityScheme(securityScheme: 'xAuthorization', type: 'apiKey', in: 'header', name: 'X-Authorization', description: 'Token X-Authorization para sistemas externos/legados')]
+#[OA\SecurityScheme(securityScheme: 'sanctum', type: 'http', scheme: 'bearer', bearerFormat: 'Token', description: 'Bearer token via Sanctum (default login)')]
+#[OA\SecurityScheme(securityScheme: 'xAuthorization', type: 'apiKey', in: 'header', name: 'X-Authorization', description: 'X-Authorization token for external/legacy systems')]
 #[OA\Tag(name: 'Auth')]
 #[OA\Tag(name: 'Players')]
 #[OA\Tag(name: 'Teams')]
@@ -25,7 +25,7 @@ use OpenApi\Attributes as OA;
         new OA\Property(property: 'password', type: 'string', example: 'password123'),
         new OA\Property(property: 'password_confirmation', type: 'string', example: 'password123')
     ])),
-    responses: [new OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Created successfully','data'=>['user'=>['id'=>'01...','name'=>'John Doe','email'=>'john@example.com','role'=>'user'],'token'=>'1|plain_token'],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']])), new OA\Response(response: 422, description: 'Validation error', content: new OA\JsonContent(example: ['success'=>false,'message'=>'Dados inválidos.','errors'=>['email'=>['Este e-mail já está em uso.']],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']]))]
+    responses: [new OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Created successfully','data'=>['user'=>['id'=>'01...','name'=>'John Doe','email'=>'john@example.com','role'=>'user'],'token'=>'1|plain_token'],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']])), new OA\Response(response: 422, description: 'Validation error', content: new OA\JsonContent(example: ['success'=>false,'message'=>'Invalid data.','errors'=>['email'=>['This email is already in use.']],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']]))]
 )]
 
 // ── Auth: Login (Bearer) ────────────────────────────────────────
@@ -34,12 +34,12 @@ use OpenApi\Attributes as OA;
     operationId: 'authLogin',
     tags: ['Auth'],
     summary: 'Login (Bearer Token)',
-    description: 'Login para usuarios do sistema. Retorna Bearer Token (Sanctum).',
+    description: 'Login for platform users. Returns Sanctum bearer token.',
     requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['email','password'], properties: [
         new OA\Property(property: 'email', type: 'string', example: 'admin@example.com'),
         new OA\Property(property: 'password', type: 'string', example: 'password')
     ])),
-    responses: [new OA\Response(response: 200, description: 'Success', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Success','data'=>['user'=>['id'=>'01...','email'=>'admin@example.com','role'=>'admin'],'token'=>'1|plain_token'],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']])), new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(example: ['success'=>false,'message'=>'Credenciais inválidas.','errors'=>null,'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']]))]
+    responses: [new OA\Response(response: 200, description: 'Success', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Success','data'=>['user'=>['id'=>'01...','email'=>'admin@example.com','role'=>'admin'],'token'=>'1|plain_token'],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']])), new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(example: ['success'=>false,'message'=>'Invalid credentials.','errors'=>null,'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']]))]
 )]
 
 // ── Auth: X-Login (X-Authorization) ────────────────────────────
@@ -48,23 +48,23 @@ use OpenApi\Attributes as OA;
     operationId: 'authXLogin',
     tags: ['Auth'],
     summary: 'Login (X-Authorization)',
-    description: 'Login para sistemas externos/legados. Retorna X-Authorization Token.',
+    description: 'Login for external/legacy systems. Returns X-Authorization token.',
     requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['email','password'], properties: [
         new OA\Property(property: 'email', type: 'string', example: 'admin@example.com'),
         new OA\Property(property: 'password', type: 'string', example: 'password')
     ])),
-    responses: [new OA\Response(response: 200, description: 'Success', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Success','data'=>['user'=>['id'=>'01...','email'=>'admin@example.com','role'=>'admin'],'x_token'=>'random60chartoken','expires_at'=>'2026-03-06 10:00:00'],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']])), new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(example: ['success'=>false,'message'=>'Credenciais inválidas.','errors'=>null,'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']]))]
+    responses: [new OA\Response(response: 200, description: 'Success', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Success','data'=>['user'=>['id'=>'01...','email'=>'admin@example.com','role'=>'admin'],'x_token'=>'random60chartoken','expires_at'=>'2026-03-06 10:00:00'],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']])), new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(example: ['success'=>false,'message'=>'Invalid credentials.','errors'=>null,'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']]))]
 )]
 
 // ── Auth: Logout ────────────────────────────────────────────────
-#[OA\Post(path: '/api/v1/auth/logout', operationId: 'authLogout', tags: ['Auth'], security: [['sanctum' => []], ['xAuthorization' => []]], summary: 'Logout', responses: [new OA\Response(response: 200, description: 'Success', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Logout realizado com sucesso.','data'=>['revoked'=>true],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']]))])]
+#[OA\Post(path: '/api/v1/auth/logout', operationId: 'authLogout', tags: ['Auth'], security: [['sanctum' => []], ['xAuthorization' => []]], summary: 'Logout', responses: [new OA\Response(response: 204, description: 'No content')])]
 
 // ── Auth: Me ────────────────────────────────────────────────────
 #[OA\Get(path: '/api/v1/auth/me', operationId: 'authMe', tags: ['Auth'], security: [['sanctum' => []], ['xAuthorization' => []]], summary: 'Current authenticated user', responses: [new OA\Response(response: 200, description: 'Success', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Success','data'=>['id'=>'01...','name'=>'Administrator','email'=>'admin@example.com','role'=>'admin'],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']]))])]
 
 // ── Auth: X-Token Management (Bearer only) ─────────────────────
-#[OA\Post(path: '/api/v1/auth/x-token', operationId: 'authCreateXToken', tags: ['Auth'], security: [['sanctum' => []]], summary: 'Create X-Authorization token', description: 'Requer Bearer Token. Gera um novo token X-Authorization para integracao externa.', requestBody: new OA\RequestBody(required: false, content: new OA\JsonContent(properties: [new OA\Property(property: 'name', type: 'string', example: 'integration')])) , responses: [new OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Created successfully','data'=>['token'=>'plain_x_token','expires_at'=>'2026-03-06 10:00:00'],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']]))])]
-#[OA\Delete(path: '/api/v1/auth/x-token', operationId: 'authRevokeXToken', tags: ['Auth'], security: [['sanctum' => []]], summary: 'Revoke X-Authorization token', description: 'Requer Bearer Token. Revoga um token X-Authorization existente.', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['token'], properties: [new OA\Property(property: 'token', type: 'string', example: 'plain_x_token')])) , responses: [new OA\Response(response: 200, description: 'Success', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Success','data'=>['revoked'=>true],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']])), new OA\Response(response: 422, description: 'Validation error')])]
+#[OA\Post(path: '/api/v1/auth/x-token', operationId: 'authCreateXToken', tags: ['Auth'], security: [['sanctum' => []]], summary: 'Create X-Authorization token', description: 'Requires Bearer token. Generates a new X-Authorization token for external integrations.', requestBody: new OA\RequestBody(required: false, content: new OA\JsonContent(properties: [new OA\Property(property: 'name', type: 'string', example: 'integration')])) , responses: [new OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Created successfully','data'=>['token'=>'plain_x_token','expires_at'=>'2026-03-06 10:00:00'],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']]))])]
+#[OA\Delete(path: '/api/v1/auth/x-token', operationId: 'authRevokeXToken', tags: ['Auth'], security: [['sanctum' => []]], summary: 'Revoke X-Authorization token', description: 'Requires Bearer token. Revokes an existing X-Authorization token.', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['token'], properties: [new OA\Property(property: 'token', type: 'string', example: 'plain_x_token')])) , responses: [new OA\Response(response: 200, description: 'Success', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Success','data'=>['revoked'=>true],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']])), new OA\Response(response: 422, description: 'Validation error')])]
 
 // ── Players ─────────────────────────────────────────────────────
 #[OA\Get(path: '/api/v1/players', operationId: 'playersIndex', tags: ['Players'], security: [['sanctum' => []], ['xAuthorization' => []]], summary: 'List players', description: 'Ability: players:read OR players:*', parameters: [new OA\Parameter(name: 'per_page', in: 'query', schema: new OA\Schema(type: 'integer', example: 15)), new OA\Parameter(name: 'search', in: 'query', schema: new OA\Schema(type: 'string', example: 'LeBron')), new OA\Parameter(name: 'position', in: 'query', schema: new OA\Schema(type: 'string', example: 'F')), new OA\Parameter(name: 'team_id', in: 'query', schema: new OA\Schema(type: 'string', example: '01...')), new OA\Parameter(name: 'is_active', in: 'query', schema: new OA\Schema(type: 'boolean', example: true))], responses: [new OA\Response(response: 200, description: 'Success', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Success','data'=>[['id'=>'01...','first_name'=>'LeBron','last_name'=>'James','position'=>'F','team_id'=>'01...']],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0','pagination'=>['total'=>1,'per_page'=>15,'current_page'=>1,'last_page'=>1]]]))])]
