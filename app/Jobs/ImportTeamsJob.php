@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
-use App\External\BallDontLie\BallDontLieService;
-use App\Services\TeamService;
+use App\Contracts\Services\TeamServiceInterface;
+use App\External\BallDontLie\Contracts\BallDontLieServiceInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -18,7 +18,7 @@ class ImportTeamsJob implements ShouldQueue
     public int $backoff = 60;
     public int $timeout = 3600;
 
-    public function handle(BallDontLieService $service, TeamService $teamService): void
+    public function handle(BallDontLieServiceInterface $service, TeamServiceInterface $teamService): void
     {
         $page = 1;
         $perPage = config('balldontlie.pagination.per_page', 100);

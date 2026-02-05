@@ -3,8 +3,8 @@
 namespace App\Jobs;
 
 use App\Contracts\Repositories\TeamRepositoryInterface;
-use App\External\BallDontLie\BallDontLieService;
-use App\Services\GameService;
+use App\Contracts\Services\GameServiceInterface;
+use App\External\BallDontLie\Contracts\BallDontLieServiceInterface;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -26,8 +26,8 @@ class ImportGamesJob implements ShouldQueue
     ) {}
 
     public function handle(
-        BallDontLieService $service,
-        GameService $gameService,
+        BallDontLieServiceInterface $service,
+        GameServiceInterface $gameService,
         TeamRepositoryInterface $teamRepository
     ): void {
         $page = 1;
