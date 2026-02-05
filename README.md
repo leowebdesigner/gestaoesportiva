@@ -150,6 +150,19 @@ curl -X POST http://localhost:8000/api/v1/auth/login \
 
 Também há suporte ao header `X-Authorization` para integrações externas.
 
+Exemplos:
+
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/x-login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"password"}'
+```
+
+```bash
+curl http://localhost:8000/api/v1/players \
+  -H "X-Authorization: {x_token}"
+```
+
 ## 👥 Perfis de Acesso
 
 Administrador:
