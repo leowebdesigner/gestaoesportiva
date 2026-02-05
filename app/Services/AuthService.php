@@ -4,12 +4,12 @@ namespace App\Services;
 
 use App\Contracts\Repositories\UserRepositoryInterface;
 use App\Contracts\Services\AuthServiceInterface;
+use App\Enums\UserRole;
 use App\Exceptions\UnauthorizedException;
 use App\Models\User;
 use App\Models\XAuthorizationToken;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 class AuthService implements AuthServiceInterface
@@ -20,8 +20,7 @@ class AuthService implements AuthServiceInterface
 
     public function register(array $data): array
     {
-        $data['password'] = Hash::make($data['password']);
-        $data['role'] = $data['role'] ?? 'user';
+        $data['role'] = UserRole::USER->value;
 
         $user = $this->userRepository->create($data);
 
@@ -63,12 +62,13 @@ class AuthService implements AuthServiceInterface
         $plain = Str::random(60);
         $hashed = hash('sha256', $plain);
 
+        $role = $user->role instanceof UserRole ? $user->role : UserRole::from($user->role);
         $expiresAt = Carbon::now()->addDays((int) config('app.x_auth_token_expiration_days', 30));
 
         $token = $user->xAuthorizationTokens()->create([
             'token' => $hashed,
             'name' => $name,
-            'abilities' => ['*'],
+            'abilities' => $role->abilities(),
             'expires_at' => $expiresAt,
         ]);
 
@@ -86,27 +86,31 @@ class AuthService implements AuthServiceInterface
             ->delete();
     }
 
-    private function issueToken(User $user): string
+    public function loginForXAuth(array $credentials): array
     {
-        if ($user->isAdministrator()) {
-            return $user->createToken('admin-token', [
-                'players:*',
-                'teams:*',
-                'games:*',
-                'import:*',
-            ])->plainTextToken;
+        if (!Auth::attempt($credentials)) {
+            throw new UnauthorizedException(__('messages.auth.invalid_credentials'));
         }
 
-        return $user->createToken('api-token', [
-            'players:read',
-            'players:create',
-            'players:update',
-            'teams:read',
-            'teams:create',
-            'teams:update',
-            'games:read',
-            'games:create',
-            'games:update',
-        ])->plainTextToken;
+        /** @var User $user */
+        $user = $this->userRepository->findByEmail($credentials['email']);
+
+        if (!$user) {
+            throw new UnauthorizedException(__('messages.auth.user_not_found'));
+        }
+
+        $xToken = $this->createXToken($user, 'external-login');
+
+        return ['user' => $user, 'x_token' => $xToken];
+    }
+
+    private function issueToken(User $user): string
+    {
+        $role = $user->role instanceof UserRole ? $user->role : UserRole::from($user->role);
+
+        return $user->createToken(
+            $role === UserRole::ADMIN ? 'admin-token' : 'api-token',
+            $role->abilities()
+        )->plainTextToken;
     }
 }

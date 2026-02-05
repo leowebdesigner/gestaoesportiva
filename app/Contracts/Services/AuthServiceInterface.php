@@ -11,6 +11,8 @@ interface AuthServiceInterface
 
     public function login(array $credentials): array;
 
+    public function loginForXAuth(array $credentials): array;
+
     public function logout(User $user): void;
 
     public function me(User $user): User;

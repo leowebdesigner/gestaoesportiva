@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('teams', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->unsignedInteger('external_id')->nullable()->unique()->index();
+            $table->unsignedInteger('external_id')->nullable()->unique();
             $table->string('name')->index();
             $table->string('city')->index();
             $table->string('abbreviation', 10)->index();

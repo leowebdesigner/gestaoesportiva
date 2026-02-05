@@ -2,20 +2,29 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\GameController;
+use App\Http\Controllers\Api\V1\ImportController;
 use App\Http\Controllers\Api\V1\PlayerController;
 use App\Http\Controllers\Api\V1\TeamController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
+    // ── Public ──────────────────────────────────────────────
     Route::post('/auth/register', [AuthController::class, 'register']);
-    Route::post('/auth/login', [AuthController::class, 'login']);
+    Route::post('/auth/login', [AuthController::class, 'login']);         // → Bearer token
+    Route::post('/auth/x-login', [AuthController::class, 'xLogin']);     // → X-Authorization token
 
+    // ── Bearer-only (X-Token management) ────────────────────
     Route::middleware('auth:sanctum')->group(function () {
-        Route::post('/auth/logout', [AuthController::class, 'logout']);
-        Route::get('/auth/me', [AuthController::class, 'me']);
         Route::post('/auth/x-token', [AuthController::class, 'createXToken']);
         Route::delete('/auth/x-token', [AuthController::class, 'revokeXToken']);
+    });
 
+    // ── Dual auth (Bearer OR X-Authorization) ───────────────
+    Route::middleware('auth.multi')->group(function () {
+        Route::post('/auth/logout', [AuthController::class, 'logout']);
+        Route::get('/auth/me', [AuthController::class, 'me']);
+
+        // Players
         Route::get('/players', [PlayerController::class, 'index'])
             ->middleware('ability:players:read,players:*')
             ->can('viewAny', \App\Models\Player::class);
@@ -32,6 +41,7 @@ Route::prefix('v1')->group(function () {
             ->middleware('ability:players:delete,players:*')
             ->can('delete', 'player');
 
+        // Teams
         Route::get('/teams', [TeamController::class, 'index'])
             ->middleware('ability:teams:read,teams:*')
             ->can('viewAny', \App\Models\Team::class);
@@ -51,6 +61,7 @@ Route::prefix('v1')->group(function () {
             ->middleware('ability:players:read,players:*')
             ->can('view', 'team');
 
+        // Games
         Route::get('/games', [GameController::class, 'index'])
             ->middleware('ability:games:read,games:*')
             ->can('viewAny', \App\Models\Game::class);
@@ -66,5 +77,13 @@ Route::prefix('v1')->group(function () {
         Route::delete('/games/{game}', [GameController::class, 'destroy'])
             ->middleware('ability:games:delete,games:*')
             ->can('delete', 'game');
+
+        // Import
+        Route::prefix('import')->middleware('ability:import:*')->group(function () {
+            Route::post('/teams', [ImportController::class, 'teams'])->can('import-data');
+            Route::post('/players', [ImportController::class, 'players'])->can('import-data');
+            Route::post('/games', [ImportController::class, 'games'])->can('import-data');
+            Route::post('/all', [ImportController::class, 'all'])->can('import-data');
+        });
     });
 });

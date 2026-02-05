@@ -2,9 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Auth\XAuthAccessToken;
 use App\Models\XAuthorizationToken;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class XAuthorizationMiddleware
@@ -16,7 +18,7 @@ class XAuthorizationMiddleware
         if (!$token) {
             return response()->json([
                 'success' => false,
-                'message' => 'X-Authorization header required',
+                'message' => __('messages.errors.not_authenticated'),
             ], 401);
         }
 
@@ -31,14 +33,15 @@ class XAuthorizationMiddleware
         if (!$xToken) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid or expired X-Authorization token',
+                'message' => __('messages.errors.unauthorized'),
             ], 401);
         }
 
         $xToken->update(['last_used_at' => now()]);
 
-        $request->merge(['x_auth_user' => $xToken->user]);
-        $request->merge(['x_auth_token' => $xToken]);
+        $user = $xToken->user;
+        Auth::setUser($user);
+        $user->withAccessToken(new XAuthAccessToken($xToken->abilities ?? ['*']));
 
         return $next($request);
     }

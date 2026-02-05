@@ -17,9 +17,6 @@ return new class extends Migration
             $table->timestamp('expires_at')->nullable()->index();
             $table->timestamp('last_used_at')->nullable();
             $table->timestamps();
-
-            $table->index('token');
-            $table->index('user_id');
         });
     }
 

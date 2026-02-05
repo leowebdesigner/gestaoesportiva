@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('games', function (Blueprint $table) {
             $table->ulid('id')->primary();
-            $table->unsignedInteger('external_id')->nullable()->unique()->index();
+            $table->unsignedInteger('external_id')->nullable()->unique();
             $table->foreignUlid('home_team_id')->constrained('teams')->cascadeOnDelete();
             $table->foreignUlid('visitor_team_id')->constrained('teams')->cascadeOnDelete();
             $table->unsignedSmallInteger('home_team_score')->default(0);
