@@ -12,9 +12,7 @@ interface RepositoryInterface
 
     public function paginate(int $perPage = 15, array $columns = ['*']): LengthAwarePaginator;
 
-    public function find(string $id, array $columns = ['*']): ?Model;
-
-    public function findByUuid(string $uuid, array $columns = ['*']): ?Model;
+    public function findById(string $id, array $columns = ['*']): ?Model;
 
     public function findOrFail(string $id, array $columns = ['*']): Model;
 

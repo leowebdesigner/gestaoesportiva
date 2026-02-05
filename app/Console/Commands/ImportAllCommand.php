@@ -6,6 +6,7 @@ use App\Jobs\ImportGamesJob;
 use App\Jobs\ImportPlayersJob;
 use App\Jobs\ImportTeamsJob;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Bus;
 
 class ImportAllCommand extends Command
 {
@@ -16,11 +17,13 @@ class ImportAllCommand extends Command
     {
         $season = (int) ($this->argument('season') ?? config('balldontlie.default_season'));
 
-        ImportTeamsJob::dispatch();
-        ImportPlayersJob::dispatch();
-        ImportGamesJob::dispatch($season);
+        Bus::chain([
+            new ImportTeamsJob(),
+            new ImportPlayersJob(),
+            new ImportGamesJob($season),
+        ])->dispatch();
 
-        $this->info('Importação completa iniciada.');
+        $this->info('Import init: Teams → Players → Games.');
 
         return self::SUCCESS;
     }
