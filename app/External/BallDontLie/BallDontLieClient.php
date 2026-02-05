@@ -39,25 +39,40 @@ class BallDontLieClient implements BallDontLieClientInterface
     {
         $this->respectRateLimit();
 
-        /** @var Response $response */
-        $response = Http::retry(
-            config('balldontlie.retry.times', 3),
-            config('balldontlie.retry.sleep', 1000)
-        )
-            ->timeout(config('balldontlie.timeout', 30))
-            ->withHeaders([
-                'Authorization' => config('balldontlie.api_key'),
-            ])
-            ->get($this->baseUrl() . $uri, $query);
+        $maxRetries = (int) config('balldontlie.retry.times', 3);
+        $baseSleepMs = (int) config('balldontlie.retry.sleep', 1000);
+        $rateWindow = (int) config('balldontlie.rate_limit.window', 60);
 
-        if (!$response->successful()) {
-            throw new ExternalApiException(
-                'Error in BallDontLie: ' . $response->status(),
-                $response->status()
-            );
-        }
+        $attempts = 0;
 
-        return $response->json();
+        do {
+            $this->respectRateLimit();
+
+            /** @var Response $response */
+            $response = Http::timeout(config('balldontlie.timeout', 30))
+                ->withHeaders([
+                    'Authorization' => config('balldontlie.api_key'),
+                ])
+                ->get($this->baseUrl() . $uri, $query);
+
+            if ($response->status() === 429) {
+                $attempts++;
+                $sleepMs = max($baseSleepMs, $rateWindow * 1000);
+                usleep($sleepMs * 1000);
+                continue;
+            }
+
+            if (!$response->successful()) {
+                throw new ExternalApiException(
+                    'Error in BallDontLie: ' . $response->status(),
+                    $response->status()
+                );
+            }
+
+            return $response->json();
+        } while ($attempts < $maxRetries);
+
+        throw new ExternalApiException('Error in BallDontLie: 429', 429);
     }
 
     private function baseUrl(): string
