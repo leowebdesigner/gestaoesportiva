@@ -21,8 +21,8 @@ class RevokeXTokenRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'token.required' => 'O token é obrigatório.',
-            'token.string' => 'O token deve ser uma string.',
+            'token.required' => 'Token is required.',
+            'token.string' => 'Token must be a string.',
         ];
     }
 }

@@ -24,12 +24,12 @@ class RegisterRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => 'O nome é obrigatório.',
-            'email.required' => 'O e-mail é obrigatório.',
-            'email.email' => 'O e-mail informado é inválido.',
-            'email.unique' => 'Este e-mail já está em uso.',
-            'password.required' => 'A senha é obrigatória.',
-            'password.confirmed' => 'A confirmação de senha não confere.',
+            'name.required' => 'Name is required.',
+            'email.required' => 'Email is required.',
+            'email.email' => 'Email must be a valid email address.',
+            'email.unique' => 'This email is already in use.',
+            'password.required' => 'Password is required.',
+            'password.confirmed' => 'Password confirmation does not match.',
         ];
     }
 }
