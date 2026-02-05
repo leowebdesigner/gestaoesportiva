@@ -147,4 +147,11 @@ class TeamService implements TeamServiceInterface
         return $this->teamRepository->getByDivision($division);
     }
 
+    /**
+     * Get a map of external IDs to internal IDs.
+     */
+    public function getExternalIdMap(): Collection
+    {
+        return $this->teamRepository->getExternalIdMap();
+    }
 }

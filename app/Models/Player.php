@@ -78,8 +78,13 @@ class Player extends BaseModel
         return $query->where('draft_year', $year);
     }
 
-    public function getFullNameAttribute(): string
+    /**
+     * Get the player's full name.
+     */
+    protected function fullName(): \Illuminate\Database\Eloquent\Casts\Attribute
     {
-        return trim($this->first_name . ' ' . $this->last_name);
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: fn () => trim($this->first_name . ' ' . $this->last_name),
+        );
     }
 }

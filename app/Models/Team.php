@@ -39,7 +39,10 @@ class Team extends BaseModel
         return $this->hasMany(Game::class, 'visitor_team_id');
     }
 
-    public function allGames(): Builder
+    /**
+     * Get a query builder for all games (home and away) for this team.
+     */
+    public function allGamesQuery(): Builder
     {
         return Game::query()->byTeam($this->id);
     }

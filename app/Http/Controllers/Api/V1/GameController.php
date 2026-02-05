@@ -9,6 +9,7 @@ use App\Http\Requests\Game\UpdateGameRequest;
 use App\Http\Resources\GameResource;
 use App\Models\Game;
 use App\Traits\ApiResponse;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -48,5 +49,31 @@ class GameController extends Controller
     {
         $this->gameService->delete($game->id);
         return $this->noContent();
+    }
+
+    /**
+     * Get games by season.
+     */
+    public function bySeason(int $season): JsonResponse
+    {
+        $games = $this->gameService->getBySeason($season);
+        return $this->success(GameResource::collection($games));
+    }
+
+    /**
+     * Get games by date range.
+     */
+    public function byDateRange(Request $request): JsonResponse
+    {
+        $request->validate([
+            'start_date' => ['required', 'date'],
+            'end_date' => ['required', 'date', 'after_or_equal:start_date'],
+        ]);
+
+        $start = Carbon::parse($request->query('start_date'));
+        $end = Carbon::parse($request->query('end_date'));
+
+        $games = $this->gameService->getByDateRange($start, $end);
+        return $this->success(GameResource::collection($games));
     }
 }

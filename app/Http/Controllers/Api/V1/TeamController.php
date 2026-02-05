@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Contracts\Services\GameServiceInterface;
 use App\Contracts\Services\PlayerServiceInterface;
 use App\Contracts\Services\TeamServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Team\StoreTeamRequest;
 use App\Http\Requests\Team\UpdateTeamRequest;
+use App\Http\Resources\GameResource;
 use App\Http\Resources\PlayerResource;
 use App\Http\Resources\TeamResource;
 use App\Models\Team;
@@ -20,7 +22,8 @@ class TeamController extends Controller
 
     public function __construct(
         private TeamServiceInterface $teamService,
-        private PlayerServiceInterface $playerService
+        private PlayerServiceInterface $playerService,
+        private GameServiceInterface $gameService
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -57,5 +60,33 @@ class TeamController extends Controller
     {
         $players = $this->playerService->getByTeam($team->id);
         return $this->success(PlayerResource::collection($players));
+    }
+
+    /**
+     * Get teams by conference.
+     */
+    public function byConference(string $conference): JsonResponse
+    {
+        $teams = $this->teamService->getByConference($conference);
+        return $this->success(TeamResource::collection($teams));
+    }
+
+    /**
+     * Get teams by division.
+     */
+    public function byDivision(string $division): JsonResponse
+    {
+        $teams = $this->teamService->getByDivision($division);
+        return $this->success(TeamResource::collection($teams));
+    }
+
+    /**
+     * Get all games for a team.
+     */
+    public function games(Team $team, Request $request): JsonResponse
+    {
+        $season = $request->query('season') ? (int) $request->query('season') : null;
+        $games = $this->gameService->getByTeam($team->id, $season);
+        return $this->success(GameResource::collection($games));
     }
 }

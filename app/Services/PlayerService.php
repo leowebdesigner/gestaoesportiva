@@ -204,4 +204,14 @@ class PlayerService implements PlayerServiceInterface
 
         return $this->playerRepository->getByTeam($team->id);
     }
+
+    /**
+     * Search players by name.
+     */
+    public function searchByName(string $term): Collection
+    {
+        return $this->cacheRemember('search:' . md5($term), function () use ($term) {
+            return $this->playerRepository->searchByName($term);
+        });
+    }
 }

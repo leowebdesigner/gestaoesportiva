@@ -47,6 +47,10 @@ Route::prefix('v1')->group(function () {
         Route::get('/teams', [TeamController::class, 'index'])
             ->middleware('ability:teams:read,teams:*')
             ->can('viewAny', \App\Models\Team::class);
+        Route::get('/teams/conference/{conference}', [TeamController::class, 'byConference'])
+            ->middleware('ability:teams:read,teams:*');
+        Route::get('/teams/division/{division}', [TeamController::class, 'byDivision'])
+            ->middleware('ability:teams:read,teams:*');
         Route::post('/teams', [TeamController::class, 'store'])
             ->middleware('ability:teams:create,teams:*')
             ->can('create', \App\Models\Team::class);
@@ -62,11 +66,19 @@ Route::prefix('v1')->group(function () {
         Route::get('/teams/{team}/players', [TeamController::class, 'players'])
             ->middleware('ability:players:read,players:*')
             ->can('view', 'team');
+        Route::get('/teams/{team}/games', [TeamController::class, 'games'])
+            ->middleware('ability:games:read,games:*')
+            ->can('view', 'team');
 
         // Games
         Route::get('/games', [GameController::class, 'index'])
             ->middleware('ability:games:read,games:*')
             ->can('viewAny', \App\Models\Game::class);
+        Route::get('/games/season/{season}', [GameController::class, 'bySeason'])
+            ->middleware('ability:games:read,games:*')
+            ->where('season', '[0-9]+');
+        Route::get('/games/date-range', [GameController::class, 'byDateRange'])
+            ->middleware('ability:games:read,games:*');
         Route::post('/games', [GameController::class, 'store'])
             ->middleware('ability:games:create,games:*')
             ->can('create', \App\Models\Game::class);
