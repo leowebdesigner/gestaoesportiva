@@ -2,19 +2,23 @@
 
 namespace App\Exceptions;
 
+use App\Traits\ApiMeta;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException as LaravelValidationException;
-use Illuminate\Http\Exceptions\ThrottleRequestsException;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Throwable;
 
 class Handler extends ExceptionHandler
 {
-    public function render($request, Throwable $e): JsonResponse
+    use ApiMeta;
+
+    public function render($request, Throwable $e): Response
     {
         if ($request->expectsJson() || $request->is('api/*')) {
             return $this->handleApiException($e);
@@ -27,6 +31,7 @@ class Handler extends ExceptionHandler
     {
         return $this->handleApiException($e);
     }
+
 
     private function handleApiException(Throwable $e): JsonResponse
     {
@@ -109,10 +114,7 @@ class Handler extends ExceptionHandler
             'success' => $response['success'],
             'message' => $response['message'],
             'errors' => $response['errors'],
-            'meta' => [
-                'timestamp' => now()->toDateTimeString(),
-                'version' => config('app.api_version', '1.0'),
-            ],
+            'meta' => self::apiMeta(),
         ], $response['code']);
     }
 }
