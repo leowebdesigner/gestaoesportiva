@@ -15,6 +15,7 @@ use App\Models\Team;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class TeamController extends Controller
 {
@@ -50,7 +51,7 @@ class TeamController extends Controller
         return $this->success(new TeamResource($updated));
     }
 
-    public function destroy(Team $team): JsonResponse
+    public function destroy(Team $team): Response
     {
         $this->teamService->delete($team->id);
         return $this->noContent();

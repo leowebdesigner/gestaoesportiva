@@ -11,6 +11,7 @@ use App\Http\Resources\UserResource;
 use App\Traits\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class AuthController extends Controller
 {
@@ -48,7 +49,7 @@ class AuthController extends Controller
         ]);
     }
 
-    public function logout(Request $request): JsonResponse
+    public function logout(Request $request): Response
     {
         if ($request->attributes->has('x_auth_token') && $request->hasHeader('X-Authorization')) {
             $this->authService->revokeXToken($request->user(), $request->header('X-Authorization'));
@@ -56,10 +57,7 @@ class AuthController extends Controller
             $this->authService->logout($request->user());
         }
 
-        return $this->success(
-            ['revoked' => true],
-            __('messages.auth.logout_success')
-        );
+        return $this->noContent();
     }
 
     public function me(Request $request): JsonResponse
