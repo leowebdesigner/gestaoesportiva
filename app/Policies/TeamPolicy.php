@@ -4,10 +4,13 @@ namespace App\Policies;
 
 use App\Models\Team;
 use App\Models\User;
+use App\Policies\Concerns\AdminAuthorization;
 use Illuminate\Auth\Access\Response;
 
 class TeamPolicy
 {
+    use AdminAuthorization;
+
     public function viewAny(User $user): Response
     {
         return Response::allow();
@@ -41,19 +44,5 @@ class TeamPolicy
     public function restore(User $user, Team $team): Response
     {
         return $this->adminOnlyAsNotFound($user);
-    }
-
-    private function adminOnly(User $user, ?string $message = null): Response
-    {
-        return $user->isAdministrator()
-            ? Response::allow()
-            : Response::deny($message ?? __('messages.errors.unauthorized_action'));
-    }
-
-    private function adminOnlyAsNotFound(User $user): Response
-    {
-        return $user->isAdministrator()
-            ? Response::allow()
-            : Response::denyAsNotFound();
     }
 }

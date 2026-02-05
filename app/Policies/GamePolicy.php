@@ -4,10 +4,13 @@ namespace App\Policies;
 
 use App\Models\Game;
 use App\Models\User;
+use App\Policies\Concerns\AdminAuthorization;
 use Illuminate\Auth\Access\Response;
 
 class GamePolicy
 {
+    use AdminAuthorization;
+
     public function viewAny(User $user): Response
     {
         return Response::allow();
@@ -41,19 +44,5 @@ class GamePolicy
     public function restore(User $user, Game $game): Response
     {
         return $this->adminOnlyAsNotFound($user);
-    }
-
-    private function adminOnly(User $user, ?string $message = null): Response
-    {
-        return $user->isAdministrator()
-            ? Response::allow()
-            : Response::deny($message ?? __('messages.errors.unauthorized_action'));
-    }
-
-    private function adminOnlyAsNotFound(User $user): Response
-    {
-        return $user->isAdministrator()
-            ? Response::allow()
-            : Response::denyAsNotFound();
     }
 }
