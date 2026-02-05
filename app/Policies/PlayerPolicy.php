@@ -30,26 +30,30 @@ class PlayerPolicy
 
     public function delete(User $user, Player $player): Response
     {
-        if ($user->isAdministrator()) {
-            return Response::allow();
-        }
-
-        return Response::deny(__('messages.player.delete_forbidden'));
+        return $this->adminOnly($user, __('messages.player.delete_forbidden'));
     }
 
     public function forceDelete(User $user, Player $player): Response
     {
-        if ($user->isAdministrator()) {
-            return Response::allow();
-        }
-
-        return Response::denyAsNotFound();
+        return $this->adminOnlyAsNotFound($user);
     }
 
     public function restore(User $user, Player $player): Response
     {
+        return $this->adminOnlyAsNotFound($user);
+    }
+
+    private function adminOnly(User $user, ?string $message = null): Response
+    {
         return $user->isAdministrator()
             ? Response::allow()
-            : Response::denyWithStatus(404);
+            : Response::deny($message ?? __('messages.errors.unauthorized_action'));
+    }
+
+    private function adminOnlyAsNotFound(User $user): Response
+    {
+        return $user->isAdministrator()
+            ? Response::allow()
+            : Response::denyAsNotFound();
     }
 }

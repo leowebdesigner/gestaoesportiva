@@ -30,26 +30,30 @@ class TeamPolicy
 
     public function delete(User $user, Team $team): Response
     {
-        if ($user->isAdministrator()) {
-            return Response::allow();
-        }
-
-        return Response::deny(__('messages.team.delete_forbidden'));
+        return $this->adminOnly($user, __('messages.team.delete_forbidden'));
     }
 
     public function forceDelete(User $user, Team $team): Response
     {
-        if ($user->isAdministrator()) {
-            return Response::allow();
-        }
-
-        return Response::denyAsNotFound();
+        return $this->adminOnlyAsNotFound($user);
     }
 
     public function restore(User $user, Team $team): Response
     {
+        return $this->adminOnlyAsNotFound($user);
+    }
+
+    private function adminOnly(User $user, ?string $message = null): Response
+    {
         return $user->isAdministrator()
             ? Response::allow()
-            : Response::denyWithStatus(404);
+            : Response::deny($message ?? __('messages.errors.unauthorized_action'));
+    }
+
+    private function adminOnlyAsNotFound(User $user): Response
+    {
+        return $user->isAdministrator()
+            ? Response::allow()
+            : Response::denyAsNotFound();
     }
 }

@@ -30,26 +30,30 @@ class GamePolicy
 
     public function delete(User $user, Game $game): Response
     {
-        if ($user->isAdministrator()) {
-            return Response::allow();
-        }
-
-        return Response::deny(__('messages.game.delete_forbidden'));
+        return $this->adminOnly($user, __('messages.game.delete_forbidden'));
     }
 
     public function forceDelete(User $user, Game $game): Response
     {
-        if ($user->isAdministrator()) {
-            return Response::allow();
-        }
-
-        return Response::denyAsNotFound();
+        return $this->adminOnlyAsNotFound($user);
     }
 
     public function restore(User $user, Game $game): Response
     {
+        return $this->adminOnlyAsNotFound($user);
+    }
+
+    private function adminOnly(User $user, ?string $message = null): Response
+    {
         return $user->isAdministrator()
             ? Response::allow()
-            : Response::denyWithStatus(404);
+            : Response::deny($message ?? __('messages.errors.unauthorized_action'));
+    }
+
+    private function adminOnlyAsNotFound(User $user): Response
+    {
+        return $user->isAdministrator()
+            ? Response::allow()
+            : Response::denyAsNotFound();
     }
 }

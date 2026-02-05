@@ -67,6 +67,11 @@ class Game extends BaseModel
         return $query->where('postseason', false);
     }
 
+    public function scopePostseason(Builder $query, bool|string|int $postseason): Builder
+    {
+        return $query->where('postseason', filter_var($postseason, FILTER_VALIDATE_BOOLEAN));
+    }
+
     public function scopeByDateRange(Builder $query, string $start, string $end): Builder
     {
         return $query->whereBetween('game_date', [$start, $end]);
