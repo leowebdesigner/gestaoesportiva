@@ -32,11 +32,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(AuthServiceInterface::class, AuthService::class);
         $this->app->singleton(ImportServiceInterface::class, ImportService::class);
 
-        // External Services
-        $this->app->singleton(
-            \App\External\BallDontLie\Contracts\BallDontLieServiceInterface::class,
-            \App\External\BallDontLie\BallDontLieService::class
-        );
     }
 
     /**

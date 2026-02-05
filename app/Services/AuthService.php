@@ -8,6 +8,7 @@ use App\Enums\UserRole;
 use App\Exceptions\UnauthorizedException;
 use App\Models\User;
 use App\Models\XAuthorizationToken;
+use App\Support\Auth\XAuthorizationHasher;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -51,7 +52,7 @@ class AuthService implements AuthServiceInterface
     public function createXToken(User $user, string $name = 'external'): XAuthorizationToken
     {
         $plain = Str::random(60);
-        $hashed = hash('sha256', $plain);
+        $hashed = XAuthorizationHasher::hash($plain);
 
         $role = $user->role instanceof UserRole ? $user->role : UserRole::from($user->role);
         $expiresAt = Carbon::now()->addDays((int) config('app.x_auth_token_expiration_days', 30));
@@ -70,7 +71,7 @@ class AuthService implements AuthServiceInterface
 
     public function revokeXToken(User $user, string $token): bool
     {
-        $hashed = hash('sha256', $token);
+        $hashed = XAuthorizationHasher::hash($token);
 
         return (bool) $user->xAuthorizationTokens()
             ->where('token', $hashed)

@@ -7,6 +7,9 @@ use Illuminate\Http\Response;
 
 trait ApiResponse
 {
+    /**
+     * ApiMeta provides the standard timestamp/version metadata.
+     */
     use ApiMeta;
 
     protected function success($data = null, string $message = 'Success', int $code = 200): JsonResponse

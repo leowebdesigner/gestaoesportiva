@@ -8,6 +8,9 @@ use App\Contracts\Repositories\TeamRepositoryInterface;
 use App\Models\Game;
 use App\Models\Team;
 use App\Services\ImportService;
+use App\Services\Mappers\ExternalGameMapper;
+use App\Services\Mappers\ExternalPlayerMapper;
+use App\Services\Mappers\ExternalTeamMapper;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
 use Tests\TestCase;
@@ -26,7 +29,14 @@ class ImportServiceTest extends TestCase
             ->once()
             ->andReturn(Team::factory()->make());
 
-        $service = new ImportService($teamRepo, $playerRepo, $gameRepo);
+        $service = new ImportService(
+            $teamRepo,
+            $playerRepo,
+            $gameRepo,
+            new ExternalTeamMapper(),
+            new ExternalPlayerMapper(),
+            new ExternalGameMapper()
+        );
 
         $team = $service->upsertTeamFromExternal([
             'id' => 1,
@@ -56,7 +66,14 @@ class ImportServiceTest extends TestCase
         $teamRepo->shouldReceive('findByExternalId')->with(2)->andReturn($visitor);
         $gameRepo->shouldReceive('upsertFromExternal')->once()->andReturn(Game::factory()->make());
 
-        $service = new ImportService($teamRepo, $playerRepo, $gameRepo);
+        $service = new ImportService(
+            $teamRepo,
+            $playerRepo,
+            $gameRepo,
+            new ExternalTeamMapper(),
+            new ExternalPlayerMapper(),
+            new ExternalGameMapper()
+        );
 
         $game = $service->upsertGameFromExternal([
             'id' => 10,

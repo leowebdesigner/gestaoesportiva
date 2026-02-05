@@ -4,6 +4,7 @@ namespace App\Support\Auth;
 
 use App\Auth\XAuthAccessToken;
 use App\Models\XAuthorizationToken;
+use App\Support\Auth\XAuthorizationHasher;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Support\Facades\Auth;
 
@@ -13,7 +14,7 @@ class XAuthorizationAuthenticator
     {
         $xToken = XAuthorizationToken::query()
             ->with('user')
-            ->where('token', hash('sha256', $plainToken))
+            ->where('token', XAuthorizationHasher::hash($plainToken))
             ->where(function ($query) {
                 $query->whereNull('expires_at')
                     ->orWhere('expires_at', '>', now());

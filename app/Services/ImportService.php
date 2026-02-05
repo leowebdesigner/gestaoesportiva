@@ -12,7 +12,9 @@ use App\Jobs\ImportTeamsJob;
 use App\Models\Game;
 use App\Models\Player;
 use App\Models\Team;
-use Carbon\Carbon;
+use App\Services\Mappers\ExternalGameMapper;
+use App\Services\Mappers\ExternalPlayerMapper;
+use App\Services\Mappers\ExternalTeamMapper;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Log;
@@ -22,7 +24,10 @@ class ImportService implements ImportServiceInterface
     public function __construct(
         private TeamRepositoryInterface $teamRepository,
         private PlayerRepositoryInterface $playerRepository,
-        private GameRepositoryInterface $gameRepository
+        private GameRepositoryInterface $gameRepository,
+        private ExternalTeamMapper $teamMapper,
+        private ExternalPlayerMapper $playerMapper,
+        private ExternalGameMapper $gameMapper
     ) {}
 
     public function importTeams(): array
@@ -109,63 +114,37 @@ class ImportService implements ImportServiceInterface
 
     public function upsertTeamFromExternal(array $externalData): Team
     {
-        $data = [
-            'external_id' => $externalData['id'] ?? null,
-            'name' => $externalData['name'] ?? null,
-            'city' => $externalData['city'] ?? null,
-            'abbreviation' => $externalData['abbreviation'] ?? null,
-            'conference' => $externalData['conference'] ?? null,
-            'division' => $externalData['division'] ?? null,
-            'full_name' => $externalData['full_name'] ?? null,
-        ];
-
-        return $this->teamRepository->upsertFromExternal($data);
+        return $this->teamRepository->upsertFromExternal(
+            $this->teamMapper->map($externalData)
+        );
     }
 
     public function bulkUpsertTeamsFromExternal(array $teamsData): int
     {
-        $rows = array_map(fn(array $t) => [
-            'external_id' => $t['id'] ?? null,
-            'name' => $t['name'] ?? null,
-            'city' => $t['city'] ?? null,
-            'abbreviation' => $t['abbreviation'] ?? null,
-            'conference' => $t['conference'] ?? null,
-            'division' => $t['division'] ?? null,
-            'full_name' => $t['full_name'] ?? null,
-        ], $teamsData);
+        $total = 0;
 
-        return $this->teamRepository->bulkUpsertFromExternal($rows);
+        foreach (array_chunk($teamsData, 500) as $chunk) {
+            $rows = array_map(
+                fn(array $t) => $this->teamMapper->map($t),
+                $chunk
+            );
+            $total += $this->teamRepository->bulkUpsertFromExternal($rows);
+        }
+
+        return $total;
     }
 
     public function upsertPlayerFromExternal(array $externalData, ?Collection $teamMap = null): Player
     {
-        $teamId = null;
-        if (isset($externalData['team']['id'])) {
-            if ($teamMap !== null) {
-                $teamId = $teamMap[$externalData['team']['id']] ?? null;
-            } else {
-                $team = $this->teamRepository->findByExternalId($externalData['team']['id']);
-                $teamId = $team?->id;
-            }
-        }
+        $teamId = $this->playerMapper->resolveTeamId(
+            $externalData,
+            $teamMap,
+            fn (int $externalId) => $this->teamRepository->findByExternalId($externalId)?->id
+        );
 
-        $playerData = [
-            'external_id' => $externalData['id'] ?? null,
-            'first_name' => $externalData['first_name'] ?? null,
-            'last_name' => $externalData['last_name'] ?? null,
-            'position' => $externalData['position'] ?? null,
-            'height' => $externalData['height'] ?? null,
-            'weight' => $externalData['weight'] ?? null,
-            'jersey_number' => $externalData['jersey_number'] ?? null,
-            'college' => $externalData['college'] ?? null,
-            'country' => $externalData['country'] ?? null,
-            'draft_year' => $externalData['draft_year'] ?? null,
-            'draft_round' => $externalData['draft_round'] ?? null,
-            'draft_number' => $externalData['draft_number'] ?? null,
-            'team_id' => $teamId,
-        ];
-
-        return $this->playerRepository->upsertFromExternal($playerData);
+        return $this->playerRepository->upsertFromExternal(
+            $this->playerMapper->map($externalData, $teamId)
+        );
     }
 
     public function bulkUpsertPlayersFromExternal(array $playersData, ?Collection $teamMap = null): int
@@ -174,70 +153,31 @@ class ImportService implements ImportServiceInterface
             $teamMap = $this->teamRepository->getExternalIdMap();
         }
 
-        $rows = array_map(function (array $p) use ($teamMap) {
-            $teamId = null;
-            if (isset($p['team']['id'])) {
-                $teamId = $teamMap[$p['team']['id']] ?? null;
-            }
+        $total = 0;
 
-            return [
-                'external_id' => $p['id'] ?? null,
-                'first_name' => $p['first_name'] ?? null,
-                'last_name' => $p['last_name'] ?? null,
-                'position' => $p['position'] ?? null,
-                'height' => $p['height'] ?? null,
-                'weight' => $p['weight'] ?? null,
-                'jersey_number' => $p['jersey_number'] ?? null,
-                'college' => $p['college'] ?? null,
-                'country' => $p['country'] ?? null,
-                'draft_year' => $p['draft_year'] ?? null,
-                'draft_round' => $p['draft_round'] ?? null,
-                'draft_number' => $p['draft_number'] ?? null,
-                'team_id' => $teamId,
-            ];
-        }, $playersData);
+        foreach (array_chunk($playersData, 500) as $chunk) {
+            $rows = array_map(function (array $p) use ($teamMap) {
+                $teamId = $this->playerMapper->resolveTeamId($p, $teamMap);
+                return $this->playerMapper->map($p, $teamId);
+            }, $chunk);
 
-        return $this->playerRepository->bulkUpsertFromExternal($rows);
+            $total += $this->playerRepository->bulkUpsertFromExternal($rows);
+        }
+
+        return $total;
     }
 
     public function upsertGameFromExternal(array $externalData, ?Collection $teamMap = null): Game
     {
-        $homeTeamId = null;
-        $visitorTeamId = null;
+        $teamIds = $this->gameMapper->resolveTeamIds(
+            $externalData,
+            $teamMap,
+            fn (int $externalId) => $this->teamRepository->findByExternalId($externalId)?->id
+        );
 
-        if (isset($externalData['home_team']['id'])) {
-            if ($teamMap !== null) {
-                $homeTeamId = $teamMap[$externalData['home_team']['id']] ?? null;
-            } else {
-                $homeTeam = $this->teamRepository->findByExternalId($externalData['home_team']['id']);
-                $homeTeamId = $homeTeam?->id;
-            }
-        }
-
-        if (isset($externalData['visitor_team']['id'])) {
-            if ($teamMap !== null) {
-                $visitorTeamId = $teamMap[$externalData['visitor_team']['id']] ?? null;
-            } else {
-                $visitorTeam = $this->teamRepository->findByExternalId($externalData['visitor_team']['id']);
-                $visitorTeamId = $visitorTeam?->id;
-            }
-        }
-
-        $data = [
-            'external_id' => $externalData['id'] ?? null,
-            'home_team_id' => $homeTeamId,
-            'visitor_team_id' => $visitorTeamId,
-            'home_team_score' => $externalData['home_team_score'] ?? 0,
-            'visitor_team_score' => $externalData['visitor_team_score'] ?? 0,
-            'season' => $externalData['season'] ?? null,
-            'period' => $externalData['period'] ?? 0,
-            'status' => $externalData['status'] ?? null,
-            'time' => $externalData['time'] ?? null,
-            'postseason' => $externalData['postseason'] ?? false,
-            'game_date' => isset($externalData['date']) ? Carbon::parse($externalData['date'])->toDateString() : null,
-        ];
-
-        return $this->gameRepository->upsertFromExternal($data);
+        return $this->gameRepository->upsertFromExternal(
+            $this->gameMapper->map($externalData, $teamIds['home'], $teamIds['visitor'])
+        );
     }
 
     public function bulkUpsertGamesFromExternal(array $gamesData, ?Collection $teamMap = null): int
@@ -246,25 +186,17 @@ class ImportService implements ImportServiceInterface
             $teamMap = $this->teamRepository->getExternalIdMap();
         }
 
-        $rows = array_map(function (array $g) use ($teamMap) {
-            $homeTeamId = isset($g['home_team']['id']) ? ($teamMap[$g['home_team']['id']] ?? null) : null;
-            $visitorTeamId = isset($g['visitor_team']['id']) ? ($teamMap[$g['visitor_team']['id']] ?? null) : null;
+        $total = 0;
 
-            return [
-                'external_id' => $g['id'] ?? null,
-                'home_team_id' => $homeTeamId,
-                'visitor_team_id' => $visitorTeamId,
-                'home_team_score' => $g['home_team_score'] ?? 0,
-                'visitor_team_score' => $g['visitor_team_score'] ?? 0,
-                'season' => $g['season'] ?? null,
-                'period' => $g['period'] ?? 0,
-                'status' => $g['status'] ?? null,
-                'time' => $g['time'] ?? null,
-                'postseason' => $g['postseason'] ?? false,
-                'game_date' => isset($g['date']) ? Carbon::parse($g['date'])->toDateString() : null,
-            ];
-        }, $gamesData);
+        foreach (array_chunk($gamesData, 500) as $chunk) {
+            $rows = array_map(function (array $g) use ($teamMap) {
+                $teamIds = $this->gameMapper->resolveTeamIds($g, $teamMap);
+                return $this->gameMapper->map($g, $teamIds['home'], $teamIds['visitor']);
+            }, $chunk);
 
-        return $this->gameRepository->bulkUpsertFromExternal($rows);
+            $total += $this->gameRepository->bulkUpsertFromExternal($rows);
+        }
+
+        return $total;
     }
 }

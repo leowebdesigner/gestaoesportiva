@@ -6,7 +6,6 @@ use App\Contracts\Repositories\PlayerRepositoryInterface;
 use App\Contracts\Repositories\TeamRepositoryInterface;
 use App\Exceptions\NotFoundException;
 use App\Models\Player;
-use App\Models\Team;
 use App\Services\PlayerService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Collection;
@@ -36,10 +35,7 @@ class PlayerServiceTest extends TestCase
         $playerRepo = Mockery::mock(PlayerRepositoryInterface::class);
         $teamRepo = Mockery::mock(TeamRepositoryInterface::class);
 
-        $team = Team::factory()->make();
-        $team->id = '01TESTTEAMID';
-
-        $teamRepo->shouldReceive('findById')->andReturn($team);
+        $teamRepo->shouldReceive('exists')->with('01TESTTEAMID')->andReturn(true);
         $playerRepo->shouldReceive('getByTeam')->with('01TESTTEAMID')->andReturn(new Collection());
 
         $service = new PlayerService($playerRepo, $teamRepo);
