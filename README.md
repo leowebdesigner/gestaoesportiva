@@ -35,7 +35,7 @@ A aplicação integra-se com a API pública [BallDontLie](https://www.balldontli
 
 ```bash
 git clone https://github.com/leowebdesigner/gestaoesportiva.git
-cd basketball-api
+cd gestaoesportiva
 ```
 
 ### 2. Copie o ambiente
