@@ -35,7 +35,8 @@ class PlayerService implements PlayerServiceInterface
 
     public function list(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $hash = 'list:' . md5(serialize($filters) . $perPage);
+        $page = (int) ($filters['page'] ?? 1);
+        $hash = 'list:' . md5(serialize($filters) . $perPage . $page);
 
         return $this->cacheRemember($hash, function () use ($filters, $perPage) {
             return $this->playerRepository
@@ -128,13 +129,13 @@ class PlayerService implements PlayerServiceInterface
 
     public function getByTeam(string $teamId): Collection
     {
-        $team = $this->teamRepository->findById($teamId);
+        $players = $this->playerRepository->getByTeam($teamId);
 
-        if (!$team) {
+        if ($players->isEmpty() && !$this->teamRepository->exists($teamId)) {
             throw new NotFoundException(__('messages.team.not_found'));
         }
 
-        return $this->playerRepository->getByTeam($team->id);
+        return $players;
     }
 
     /**

@@ -81,4 +81,9 @@ class Game extends BaseModel
     {
         return $query->where('status', $status);
     }
+
+    public function scopeStatus(Builder $query, string $status): Builder
+    {
+        return $query->where('status', $status);
+    }
 }

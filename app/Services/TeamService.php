@@ -32,7 +32,8 @@ class TeamService implements TeamServiceInterface
 
     public function list(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $hash = 'list:' . md5(serialize($filters) . $perPage);
+        $page = (int) ($filters['page'] ?? 1);
+        $hash = 'list:' . md5(serialize($filters) . $perPage . $page);
 
         return $this->cacheRemember($hash, function () use ($filters, $perPage) {
             return $this->teamRepository
