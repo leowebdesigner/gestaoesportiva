@@ -33,14 +33,14 @@ class AuthService implements AuthServiceInterface
     public function login(array $credentials): array
     {
         if (!Auth::attempt($credentials)) {
-            throw new UnauthorizedException('Credenciais inválidas.');
+            throw new UnauthorizedException(__('messages.auth.invalid_credentials'));
         }
 
         /** @var User $user */
         $user = $this->userRepository->findByEmail($credentials['email']);
 
         if (!$user) {
-            throw new UnauthorizedException('Usuário não encontrado.');
+            throw new UnauthorizedException(__('messages.auth.user_not_found'));
         }
 
         $token = $this->issueToken($user);

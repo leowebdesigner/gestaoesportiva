@@ -9,6 +9,7 @@ use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException as LaravelValidationException;
 use Illuminate\Http\Exceptions\ThrottleRequestsException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -32,31 +33,37 @@ class Handler extends ExceptionHandler
         $response = match (true) {
             $e instanceof LaravelValidationException => [
                 'success' => false,
-                'message' => 'Dados inválidos.',
+                'message' => __('messages.errors.invalid_data'),
                 'errors' => $e->errors(),
                 'code' => 422,
             ],
             $e instanceof ModelNotFoundException => [
                 'success' => false,
-                'message' => 'Recurso não encontrado.',
+                'message' => __('messages.errors.resource_not_found'),
                 'errors' => null,
                 'code' => 404,
             ],
             $e instanceof AuthenticationException => [
                 'success' => false,
-                'message' => 'Não autenticado.',
+                'message' => __('messages.errors.not_authenticated'),
                 'errors' => null,
                 'code' => 401,
             ],
             $e instanceof AuthorizationException => [
                 'success' => false,
-                'message' => $e->getMessage() ?: 'Ação não autorizada.',
+                'message' => $e->getMessage() ?: __('messages.errors.unauthorized_action'),
                 'errors' => null,
-                'code' => $e->status ?? 403,
+                'code' => $e->hasStatus() ? (int) $e->status() : 403,
+            ],
+            $e instanceof AccessDeniedHttpException => [
+                'success' => false,
+                'message' => $e->getMessage() ?: __('messages.errors.unauthorized_action'),
+                'errors' => null,
+                'code' => 403,
             ],
             $e instanceof ThrottleRequestsException => [
                 'success' => false,
-                'message' => 'Muitas requisições. Tente novamente mais tarde.',
+                'message' => __('messages.errors.too_many_requests'),
                 'errors' => null,
                 'code' => 429,
             ],
@@ -92,7 +99,7 @@ class Handler extends ExceptionHandler
             ],
             default => [
                 'success' => false,
-                'message' => config('app.debug') ? $e->getMessage() : 'Erro interno do servidor.',
+                'message' => config('app.debug') ? $e->getMessage() : __('messages.errors.internal_server_error'),
                 'errors' => null,
                 'code' => 500,
             ],

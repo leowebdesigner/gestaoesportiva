@@ -37,7 +37,7 @@ class AuthServiceProvider extends ServiceProvider
         Gate::define('import-data', function (User $user) {
             return $user->isAdministrator()
                 ? Response::allow()
-                : Response::deny('Apenas administradores podem importar dados.');
+                : Response::deny(__('messages.import.forbidden'));
         });
 
         Gate::define('access-admin-panel', function (User $user) {

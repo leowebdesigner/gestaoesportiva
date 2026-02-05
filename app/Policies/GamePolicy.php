@@ -34,7 +34,7 @@ class GamePolicy
             return Response::allow();
         }
 
-        return Response::deny('Apenas administradores podem deletar jogos.');
+        return Response::deny(__('messages.game.delete_forbidden'));
     }
 
     public function forceDelete(User $user, Game $game): Response

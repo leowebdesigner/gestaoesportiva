@@ -21,7 +21,9 @@ class PlayerAuthorizationTest extends TestCase
 
         $response = $this->deleteJson("/api/v1/players/{$player->id}");
 
-        $response->assertNoContent();
+        $response->assertOk();
+        $response->assertJsonPath('success', true);
+        $response->assertJsonPath('data.deleted', true);
         $this->assertSoftDeleted('players', ['id' => $player->id]);
     }
 
@@ -37,7 +39,7 @@ class PlayerAuthorizationTest extends TestCase
         $response->assertForbidden();
         $response->assertJson([
             'success' => false,
-            'message' => 'Apenas administradores podem deletar jogadores.',
+            'message' => 'Only administrators can delete players.',
         ]);
     }
 

@@ -51,7 +51,11 @@ class PlayerController extends Controller
     {
         $playerModel = $this->playerService->find($player->id);
         Gate::authorize('delete', $playerModel);
-        $this->playerService->delete($player->id);
-        return $this->noContent();
+        $deleted = $this->playerService->delete($player->id);
+
+        return $this->success(
+            ['deleted' => $deleted],
+            __('messages.player.deleted_success')
+        );
     }
 }

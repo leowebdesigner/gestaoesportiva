@@ -51,7 +51,11 @@ class GameController extends Controller
     {
         $gameModel = $this->gameService->find($game->id);
         Gate::authorize('delete', $gameModel);
-        $this->gameService->delete($game->id);
-        return $this->noContent();
+        $deleted = $this->gameService->delete($game->id);
+
+        return $this->success(
+            ['deleted' => $deleted],
+            __('messages.game.deleted_success')
+        );
     }
 }

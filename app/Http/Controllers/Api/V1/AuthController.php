@@ -40,7 +40,10 @@ class AuthController extends Controller
     public function logout(Request $request): JsonResponse
     {
         $this->authService->logout($request->user());
-        return $this->noContent();
+        return $this->success(
+            ['revoked' => true],
+            __('messages.auth.logout_success')
+        );
     }
 
     public function me(Request $request): JsonResponse
@@ -62,7 +65,7 @@ class AuthController extends Controller
     {
         $token = (string) $request->input('token', '');
         if ($token === '') {
-            return $this->error('Token é obrigatório.', 422);
+            return $this->error(__('messages.auth.token_required'), 422);
         }
 
         $revoked = $this->authService->revokeXToken($request->user(), $token);

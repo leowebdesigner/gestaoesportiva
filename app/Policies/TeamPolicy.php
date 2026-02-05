@@ -34,7 +34,7 @@ class TeamPolicy
             return Response::allow();
         }
 
-        return Response::deny('Apenas administradores podem deletar times.');
+        return Response::deny(__('messages.team.delete_forbidden'));
     }
 
     public function forceDelete(User $user, Team $team): Response

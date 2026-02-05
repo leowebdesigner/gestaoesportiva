@@ -9,7 +9,7 @@ class ValidationException extends Exception
     public int $httpCode;
     public array $errors;
 
-    public function __construct(string $message = 'Dados inválidos.', array $errors = [], int $httpCode = 422)
+    public function __construct(string $message = 'Invalid data.', array $errors = [], int $httpCode = 422)
     {
         parent::__construct($message, 0);
         $this->httpCode = $httpCode;

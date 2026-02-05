@@ -54,8 +54,12 @@ class TeamController extends Controller
     {
         $teamModel = $this->teamService->find($team->id);
         Gate::authorize('delete', $teamModel);
-        $this->teamService->delete($team->id);
-        return $this->noContent();
+        $deleted = $this->teamService->delete($team->id);
+
+        return $this->success(
+            ['deleted' => $deleted],
+            __('messages.team.deleted_success')
+        );
     }
 
     public function players(Team $team): JsonResponse

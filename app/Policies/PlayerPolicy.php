@@ -34,7 +34,7 @@ class PlayerPolicy
             return Response::allow();
         }
 
-        return Response::deny('Apenas administradores podem deletar jogadores.');
+        return Response::deny(__('messages.player.delete_forbidden'));
     }
 
     public function forceDelete(User $user, Player $player): Response

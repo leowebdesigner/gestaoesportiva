@@ -21,7 +21,9 @@ class DeleteGameTest extends TestCase
 
         $response = $this->deleteJson("/api/v1/games/{$game->id}");
 
-        $response->assertNoContent();
+        $response->assertOk();
+        $response->assertJsonPath('success', true);
+        $response->assertJsonPath('data.deleted', true);
         $this->assertSoftDeleted('games', ['id' => $game->id]);
     }
 }

@@ -15,7 +15,7 @@ class EnsureUserHasRole
         if (!$user || $user->role !== $role) {
             return response()->json([
                 'success' => false,
-                'message' => 'Ação não autorizada.',
+                'message' => __('messages.errors.unauthorized_action'),
             ], 403);
         }
 
