@@ -8,13 +8,13 @@ use Illuminate\Console\Command;
 class ImportPlayersCommand extends Command
 {
     protected $signature = 'import:players {--team=} {--all}';
-    protected $description = 'Importa jogadores da API externa';
+    protected $description = 'Import players from external API';
 
     public function handle(): int
     {
         $team = $this->option('team');
         ImportPlayersJob::dispatch($team ? (int) $team : null);
-        $this->info('Importação de jogadores iniciada.');
+        $this->info('Players import queued.');
 
         return self::SUCCESS;
     }

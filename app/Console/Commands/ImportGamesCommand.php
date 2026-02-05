@@ -8,7 +8,7 @@ use Illuminate\Console\Command;
 class ImportGamesCommand extends Command
 {
     protected $signature = 'import:games {season?} {--team=} {--playoffs}';
-    protected $description = 'Importa jogos da API externa';
+    protected $description = 'Import games from external API';
 
     public function handle(): int
     {
@@ -17,7 +17,7 @@ class ImportGamesCommand extends Command
         $playoffs = (bool) $this->option('playoffs');
 
         ImportGamesJob::dispatch($season, $team ? (int) $team : null, $playoffs);
-        $this->info('Importação de jogos iniciada.');
+        $this->info('Games import queued.');
 
         return self::SUCCESS;
     }

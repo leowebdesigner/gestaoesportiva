@@ -8,12 +8,12 @@ use Illuminate\Console\Command;
 class ImportTeamsCommand extends Command
 {
     protected $signature = 'import:teams';
-    protected $description = 'Importa times da API externa';
+    protected $description = 'Import teams from external API';
 
     public function handle(): int
     {
         ImportTeamsJob::dispatch();
-        $this->info('Importação de times iniciada.');
+        $this->info('Teams import queued.');
 
         return self::SUCCESS;
     }

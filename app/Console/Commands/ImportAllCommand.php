@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Bus;
 class ImportAllCommand extends Command
 {
     protected $signature = 'import:all {season?}';
-    protected $description = 'Importa todos os dados da API externa';
+    protected $description = 'Import all data from external API';
 
     public function handle(): int
     {
@@ -23,7 +23,7 @@ class ImportAllCommand extends Command
             new ImportGamesJob($season),
         ])->dispatch();
 
-        $this->info('Import init: Teams → Players → Games.');
+        $this->info('Import initialized: Teams -> Players -> Games.');
 
         return self::SUCCESS;
     }
