@@ -801,6 +801,90 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Teams By Conference",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/teams/conference/West",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "teams",
+                "conference",
+                "West"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Teams By Division",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/teams/division/Pacific",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "teams",
+                "division",
+                "Pacific"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Team Games",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/teams/{{team_id}}/games?season=2023",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "teams",
+                "{{team_id}}",
+                "games"
+              ],
+              "query": [
+                {
+                  "key": "season",
+                  "value": "2023"
+                }
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -962,6 +1046,67 @@
                 "v1",
                 "games",
                 "{{game_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Games By Season",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/games/season/2023",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "season",
+                "2023"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Games By Date Range",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/games/date-range?start_date=2023-10-01&end_date=2023-12-31",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "games",
+                "date-range"
+              ],
+              "query": [
+                {
+                  "key": "start_date",
+                  "value": "2023-10-01"
+                },
+                {
+                  "key": "end_date",
+                  "value": "2023-12-31"
+                }
               ]
             }
           },
