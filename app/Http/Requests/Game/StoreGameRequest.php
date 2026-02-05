@@ -3,12 +3,12 @@
 namespace App\Http\Requests\Game;
 
 use App\Models\Game;
-use App\Http\Rules\ValidSeasonFormat;
-use App\Http\Rules\ValidTeamId;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreGameRequest extends FormRequest
 {
+    use GameValidationRules;
+
     public function authorize(): bool
     {
         return $this->user()->can('create', Game::class);
@@ -16,17 +16,25 @@ class StoreGameRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
-            'home_team_id' => ['required', new ValidTeamId()],
-            'visitor_team_id' => ['required', new ValidTeamId(), 'different:home_team_id'],
-            'home_team_score' => ['sometimes', 'integer', 'min:0', 'max:300'],
-            'visitor_team_score' => ['sometimes', 'integer', 'min:0', 'max:300'],
-            'season' => ['required', new ValidSeasonFormat()],
-            'period' => ['sometimes', 'integer', 'min:0', 'max:20'],
-            'status' => ['required', 'string', 'max:50'],
-            'time' => ['sometimes', 'nullable', 'string', 'max:20'],
-            'postseason' => ['sometimes', 'boolean'],
-            'game_date' => ['required', 'date'],
-        ];
+        $rules = $this->baseRules();
+
+        $rules['home_team_id'] = array_merge(['required'], $rules['home_team_id']);
+        $rules['visitor_team_id'] = array_merge(['required'], $rules['visitor_team_id']);
+        $rules['season'] = array_merge(['required'], $rules['season']);
+        $rules['status'] = array_merge(['required'], $rules['status']);
+        $rules['game_date'] = array_merge(['required'], $rules['game_date']);
+
+        $rules['home_team_score'] = array_merge(['sometimes'], $rules['home_team_score']);
+        $rules['visitor_team_score'] = array_merge(['sometimes'], $rules['visitor_team_score']);
+        $rules['period'] = array_merge(['sometimes'], $rules['period']);
+        $rules['time'] = array_merge(['sometimes'], $rules['time']);
+        $rules['postseason'] = array_merge(['sometimes'], $rules['postseason']);
+
+        return $rules;
+    }
+
+    public function messages(): array
+    {
+        return $this->baseMessages();
     }
 }

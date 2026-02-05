@@ -30,16 +30,16 @@ trait PlayerValidationRules
     protected function baseMessages(): array
     {
         return [
-            'first_name.required' => 'O primeiro nome é obrigatório.',
-            'first_name.string' => 'O primeiro nome deve ser um texto.',
-            'first_name.max' => 'O primeiro nome não pode ter mais de 255 caracteres.',
-            'last_name.required' => 'O último nome é obrigatório.',
-            'last_name.string' => 'O último nome deve ser um texto.',
-            'last_name.max' => 'O último nome não pode ter mais de 255 caracteres.',
-            'position.in' => 'A posição deve ser uma das seguintes: G, F, C, G-F, F-C.',
-            'draft_year.integer' => 'O ano do draft deve ser um número inteiro.',
-            'draft_year.min' => 'O ano do draft deve ser no mínimo 1900.',
-            'draft_year.max' => 'O ano do draft deve ser no máximo 2100.',
+            'first_name.required' => 'First name is required.',
+            'first_name.string' => 'First name must be a string.',
+            'first_name.max' => 'First name may not be greater than 255 characters.',
+            'last_name.required' => 'Last name is required.',
+            'last_name.string' => 'Last name must be a string.',
+            'last_name.max' => 'Last name may not be greater than 255 characters.',
+            'position.in' => 'Position must be one of: G, F, C, G-F, F-C.',
+            'draft_year.integer' => 'Draft year must be an integer.',
+            'draft_year.min' => 'Draft year must be at least 1900.',
+            'draft_year.max' => 'Draft year must not be greater than 2100.',
         ];
     }
 }

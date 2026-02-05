@@ -13,7 +13,7 @@ class ValidPlayerId implements ValidationRule
         $player = Player::query()->where('id', $value)->whereNull('deleted_at')->first();
 
         if (!$player) {
-            $fail('O jogador selecionado não existe ou foi removido.');
+            $fail('Selected player does not exist or has been removed.');
         }
     }
 }

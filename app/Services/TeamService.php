@@ -47,7 +47,7 @@ class TeamService implements TeamServiceInterface
             $team = $this->teamRepository->findById($id);
 
             if (!$team) {
-                throw new NotFoundException('Time não encontrado.');
+                throw new NotFoundException(__('messages.team.not_found'));
             }
 
             return $team;
@@ -73,7 +73,7 @@ class TeamService implements TeamServiceInterface
             $team = $this->teamRepository->findById($id);
 
             if (!$team) {
-                throw new NotFoundException('Time não encontrado.');
+                throw new NotFoundException(__('messages.team.not_found'));
             }
 
             $team = $this->teamRepository->update($team->id, $data);
@@ -93,7 +93,7 @@ class TeamService implements TeamServiceInterface
             $team = $this->teamRepository->findById($id);
 
             if (!$team) {
-                throw new NotFoundException('Time não encontrado.');
+                throw new NotFoundException(__('messages.team.not_found'));
             }
 
             $result = $this->teamRepository->delete($team->id);

@@ -13,7 +13,7 @@ class ValidTeamId implements ValidationRule
         $team = Team::query()->where('id', $value)->whereNull('deleted_at')->first();
 
         if (!$team) {
-            $fail('O time selecionado não existe ou foi removido.');
+            $fail('Selected team does not exist or has been removed.');
         }
     }
 }

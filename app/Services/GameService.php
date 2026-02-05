@@ -54,7 +54,7 @@ class GameService implements GameServiceInterface
                 ->findById($id);
 
             if (!$game) {
-                throw new NotFoundException('Jogo não encontrado.');
+                throw new NotFoundException(__('messages.game.not_found'));
             }
 
             return $game;
@@ -82,7 +82,7 @@ class GameService implements GameServiceInterface
             $game = $this->gameRepository->findById($id);
 
             if (!$game) {
-                throw new NotFoundException('Jogo não encontrado.');
+                throw new NotFoundException(__('messages.game.not_found'));
             }
 
             $data = $this->resolveTeamIds($data);
@@ -104,7 +104,7 @@ class GameService implements GameServiceInterface
             $game = $this->gameRepository->findById($id);
 
             if (!$game) {
-                throw new NotFoundException('Jogo não encontrado.');
+                throw new NotFoundException(__('messages.game.not_found'));
             }
 
             $result = $this->gameRepository->delete($game->id);
@@ -204,7 +204,7 @@ class GameService implements GameServiceInterface
         if (isset($data['home_team_id'])) {
             $homeTeam = $this->teamRepository->findById($data['home_team_id']);
             if (!$homeTeam) {
-                throw new BusinessException('Time mandante não encontrado.', 'HOME_TEAM_NOT_FOUND');
+                throw new BusinessException(__('messages.game.home_team_not_found'), 'HOME_TEAM_NOT_FOUND');
             }
             $data['home_team_id'] = $homeTeam->id;
         }
@@ -212,7 +212,7 @@ class GameService implements GameServiceInterface
         if (isset($data['visitor_team_id'])) {
             $visitorTeam = $this->teamRepository->findById($data['visitor_team_id']);
             if (!$visitorTeam) {
-                throw new BusinessException('Time visitante não encontrado.', 'VISITOR_TEAM_NOT_FOUND');
+                throw new BusinessException(__('messages.game.visitor_team_not_found'), 'VISITOR_TEAM_NOT_FOUND');
             }
             $data['visitor_team_id'] = $visitorTeam->id;
         }

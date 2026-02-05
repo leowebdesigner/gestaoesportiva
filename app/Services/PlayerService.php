@@ -53,7 +53,7 @@ class PlayerService implements PlayerServiceInterface
                 ->findById($id);
 
             if (!$player) {
-                throw new NotFoundException('Jogador não encontrado.');
+                throw new NotFoundException(__('messages.player.not_found'));
             }
 
             return $player;
@@ -66,7 +66,7 @@ class PlayerService implements PlayerServiceInterface
             if (isset($data['team_id'])) {
                 $team = $this->teamRepository->findById($data['team_id']);
                 if (!$team) {
-                    throw new BusinessException('Time não encontrado.', 'TEAM_NOT_FOUND');
+                    throw new BusinessException(__('messages.team.not_found'), 'TEAM_NOT_FOUND');
                 }
                 $data['team_id'] = $team->id;
             }
@@ -87,13 +87,13 @@ class PlayerService implements PlayerServiceInterface
             $player = $this->playerRepository->findById($id);
 
             if (!$player) {
-                throw new NotFoundException('Jogador não encontrado.');
+                throw new NotFoundException(__('messages.player.not_found'));
             }
 
             if (isset($data['team_id'])) {
                 $team = $this->teamRepository->findById($data['team_id']);
                 if (!$team) {
-                    throw new BusinessException('Time não encontrado.', 'TEAM_NOT_FOUND');
+                    throw new BusinessException(__('messages.team.not_found'), 'TEAM_NOT_FOUND');
                 }
                 $data['team_id'] = $team->id;
             }
@@ -115,7 +115,7 @@ class PlayerService implements PlayerServiceInterface
             $player = $this->playerRepository->findById($id);
 
             if (!$player) {
-                throw new NotFoundException('Jogador não encontrado.');
+                throw new NotFoundException(__('messages.player.not_found'));
             }
 
             $result = $this->playerRepository->delete($player->id);
@@ -199,7 +199,7 @@ class PlayerService implements PlayerServiceInterface
         $team = $this->teamRepository->findById($teamId);
 
         if (!$team) {
-            throw new NotFoundException('Time não encontrado.');
+            throw new NotFoundException(__('messages.team.not_found'));
         }
 
         return $this->playerRepository->getByTeam($team->id);

@@ -21,7 +21,7 @@ class UniqueExternalId implements ValidationRule
         }
 
         if ($query->exists()) {
-            $fail('Este ID externo já está em uso.');
+            $fail('This external ID is already in use.');
         }
     }
 }

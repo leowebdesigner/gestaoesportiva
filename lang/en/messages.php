@@ -19,14 +19,19 @@ return [
     'player' => [
         'deleted_success' => 'Player deleted successfully.',
         'delete_forbidden' => 'Only administrators can delete players.',
+        'not_found' => 'Player not found.',
     ],
     'team' => [
         'deleted_success' => 'Team deleted successfully.',
         'delete_forbidden' => 'Only administrators can delete teams.',
+        'not_found' => 'Team not found.',
     ],
     'game' => [
         'deleted_success' => 'Game deleted successfully.',
         'delete_forbidden' => 'Only administrators can delete games.',
+        'not_found' => 'Game not found.',
+        'home_team_not_found' => 'Home team not found.',
+        'visitor_team_not_found' => 'Visitor team not found.',
     ],
     'import' => [
         'forbidden' => 'Only administrators can import data.',

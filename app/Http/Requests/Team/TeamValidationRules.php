@@ -25,14 +25,14 @@ trait TeamValidationRules
     protected function baseMessages(): array
     {
         return [
-            'name.required' => 'O nome do time é obrigatório.',
-            'name.max' => 'O nome do time não pode ter mais de 255 caracteres.',
-            'city.required' => 'A cidade é obrigatória.',
-            'abbreviation.required' => 'A abreviação é obrigatória.',
-            'abbreviation.max' => 'A abreviação não pode ter mais de 10 caracteres.',
-            'conference.required' => 'A conferência é obrigatória.',
-            'division.required' => 'A divisão é obrigatória.',
-            'full_name.required' => 'O nome completo é obrigatório.',
+            'name.required' => 'Team name is required.',
+            'name.max' => 'Team name may not be greater than 255 characters.',
+            'city.required' => 'City is required.',
+            'abbreviation.required' => 'Abbreviation is required.',
+            'abbreviation.max' => 'Abbreviation may not be greater than 10 characters.',
+            'conference.required' => 'Conference is required.',
+            'division.required' => 'Division is required.',
+            'full_name.required' => 'Full name is required.',
         ];
     }
 }
