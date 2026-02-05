@@ -2,7 +2,7 @@
 
 namespace App\External\BallDontLie\DTOs;
 
-class PlayerDTO
+readonly class PlayerDTO
 {
     public function __construct(
         public int $id,
