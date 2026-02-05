@@ -20,7 +20,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'auth.multi' => \App\Http\Middleware\AuthenticateMulti::class,
-            'role' => \App\Http\Middleware\EnsureUserHasRole::class,
             'ability' => \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility::class,
             'abilities' => \Laravel\Sanctum\Http\Middleware\CheckAbilities::class,
         ]);
