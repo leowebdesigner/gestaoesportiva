@@ -21,4 +21,18 @@ interface PlayerServiceInterface
     public function importFromExternal(array $externalData): Player;
 
     public function getByTeam(string $teamId): Collection;
+
+    /**
+     * Bulk import players from external data.
+     *
+     * @param array<int, array<string, mixed>> $playersData
+     * @param Collection|null $teamMap Pre-fetched team ID map for optimization
+     * @return int Number of imported/updated players
+     */
+    public function bulkImportFromExternal(array $playersData, ?Collection $teamMap = null): int;
+
+    /**
+     * Search players by name.
+     */
+    public function searchByName(string $term): Collection;
 }

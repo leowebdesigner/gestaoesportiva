@@ -23,4 +23,17 @@ interface TeamServiceInterface
     public function getByConference(string $conference): Collection;
 
     public function getByDivision(string $division): Collection;
+
+    /**
+     * Bulk import teams from external data.
+     *
+     * @param array<int, array<string, mixed>> $teamsData
+     * @return int Number of imported/updated teams
+     */
+    public function bulkImportFromExternal(array $teamsData): int;
+
+    /**
+     * Get a map of external IDs to internal IDs.
+     */
+    public function getExternalIdMap(): Collection;
 }
