@@ -211,6 +211,19 @@ return [
             'backoff' => (int) env('HORIZON_BACKOFF', 30),
             'nice' => 0,
         ],
+        'imports' => [
+            'connection' => 'redis',
+            'queue' => ['imports'],
+            'balance' => 'simple',
+            'maxProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 256,
+            'tries' => (int) env('HORIZON_IMPORT_TRIES', 3),
+            'timeout' => (int) env('HORIZON_IMPORT_TIMEOUT', 3600),
+            'backoff' => (int) env('HORIZON_IMPORT_BACKOFF', 60),
+            'nice' => 0,
+        ],
     ],
 
     'environments' => [
@@ -225,6 +238,9 @@ return [
         'local' => [
             'supervisor-1' => [
                 'maxProcesses' => (int) env('HORIZON_MAX_PROCESSES', 3),
+            ],
+            'imports' => [
+                'maxProcesses' => 1,
             ],
         ],
     ],
