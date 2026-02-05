@@ -14,6 +14,10 @@ class ImportGamesJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public int $tries = 3;
+    public int $backoff = 60;
+    public int $timeout = 3600;
+
     public function __construct(
         private int $season,
         private ?int $teamId = null,

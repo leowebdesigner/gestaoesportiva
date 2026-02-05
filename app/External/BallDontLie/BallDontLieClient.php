@@ -2,6 +2,7 @@
 
 namespace App\External\BallDontLie;
 
+use App\Exceptions\ExternalApiException;
 use App\External\BallDontLie\Contracts\BallDontLieClientInterface;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
@@ -52,7 +53,10 @@ class BallDontLieClient implements BallDontLieClientInterface
             ->get($this->baseUrl() . $uri, $query);
 
         if (!$response->successful()) {
-            throw new \RuntimeException('Erro ao consultar BallDontLie: ' . $response->status());
+            throw new ExternalApiException(
+                'Error in BallDontLie: ' . $response->status(),
+                $response->status()
+            );
         }
 
         return $response->json();

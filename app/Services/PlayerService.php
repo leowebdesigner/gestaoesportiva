@@ -8,27 +8,36 @@ use App\Contracts\Services\PlayerServiceInterface;
 use App\Exceptions\BusinessException;
 use App\Exceptions\NotFoundException;
 use App\Models\Player;
+use App\Traits\Cacheable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PlayerService implements PlayerServiceInterface
 {
-    private const CACHE_TTL = 3600;
-    private const CACHE_PREFIX = 'players:';
+    use Cacheable;
 
     public function __construct(
         private PlayerRepositoryInterface $playerRepository,
         private TeamRepositoryInterface $teamRepository
     ) {}
 
+    protected function cachePrefix(): string
+    {
+        return 'players:';
+    }
+
+    protected function cacheTtl(): int
+    {
+        return (int) config('cache.ttl.players', 3600);
+    }
+
     public function list(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $cacheKey = self::CACHE_PREFIX . 'list:' . md5(serialize($filters) . $perPage);
+        $hash = 'list:' . md5(serialize($filters) . $perPage);
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($filters, $perPage) {
+        return $this->cacheRemember($hash, function () use ($filters, $perPage) {
             return $this->playerRepository
                 ->with(['team'])
                 ->filter($filters)
@@ -38,12 +47,10 @@ class PlayerService implements PlayerServiceInterface
 
     public function find(string $id): Player
     {
-        $cacheKey = self::CACHE_PREFIX . 'id:' . $id;
-
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($id) {
+        return $this->cacheRemember('id:' . $id, function () use ($id) {
             $player = $this->playerRepository
                 ->with(['team'])
-                ->findByUuid($id);
+                ->findById($id);
 
             if (!$player) {
                 throw new NotFoundException('Jogador não encontrado.');
@@ -57,7 +64,7 @@ class PlayerService implements PlayerServiceInterface
     {
         return DB::transaction(function () use ($data) {
             if (isset($data['team_id'])) {
-                $team = $this->teamRepository->findByUuid($data['team_id']);
+                $team = $this->teamRepository->findById($data['team_id']);
                 if (!$team) {
                     throw new BusinessException('Time não encontrado.', 'TEAM_NOT_FOUND');
                 }
@@ -66,7 +73,7 @@ class PlayerService implements PlayerServiceInterface
 
             $player = $this->playerRepository->create($data);
 
-            $this->clearListCache();
+            $this->cacheClearPrefix();
 
             Log::info('Player created', ['player_id' => $player->id]);
 
@@ -77,14 +84,14 @@ class PlayerService implements PlayerServiceInterface
     public function update(string $id, array $data): Player
     {
         return DB::transaction(function () use ($id, $data) {
-            $player = $this->playerRepository->findByUuid($id);
+            $player = $this->playerRepository->findById($id);
 
             if (!$player) {
                 throw new NotFoundException('Jogador não encontrado.');
             }
 
             if (isset($data['team_id'])) {
-                $team = $this->teamRepository->findByUuid($data['team_id']);
+                $team = $this->teamRepository->findById($data['team_id']);
                 if (!$team) {
                     throw new BusinessException('Time não encontrado.', 'TEAM_NOT_FOUND');
                 }
@@ -93,8 +100,8 @@ class PlayerService implements PlayerServiceInterface
 
             $player = $this->playerRepository->update($player->id, $data);
 
-            $this->clearPlayerCache($id);
-            $this->clearListCache();
+            $this->cacheForgetItem($id);
+            $this->cacheClearPrefix();
 
             Log::info('Player updated', ['player_id' => $player->id]);
 
@@ -105,7 +112,7 @@ class PlayerService implements PlayerServiceInterface
     public function delete(string $id): bool
     {
         return DB::transaction(function () use ($id) {
-            $player = $this->playerRepository->findByUuid($id);
+            $player = $this->playerRepository->findById($id);
 
             if (!$player) {
                 throw new NotFoundException('Jogador não encontrado.');
@@ -113,8 +120,8 @@ class PlayerService implements PlayerServiceInterface
 
             $result = $this->playerRepository->delete($player->id);
 
-            $this->clearPlayerCache($id);
-            $this->clearListCache();
+            $this->cacheForgetItem($id);
+            $this->cacheClearPrefix();
 
             Log::info('Player deleted', ['player_id' => $player->id]);
 
@@ -153,22 +160,12 @@ class PlayerService implements PlayerServiceInterface
 
     public function getByTeam(string $teamId): Collection
     {
-        $team = $this->teamRepository->findByUuid($teamId);
+        $team = $this->teamRepository->findById($teamId);
 
         if (!$team) {
             throw new NotFoundException('Time não encontrado.');
         }
 
         return $this->playerRepository->getByTeam($team->id);
-    }
-
-    private function clearPlayerCache(string $id): void
-    {
-        Cache::forget(self::CACHE_PREFIX . 'id:' . $id);
-    }
-
-    private function clearListCache(): void
-    {
-        Cache::flush();
     }
 }

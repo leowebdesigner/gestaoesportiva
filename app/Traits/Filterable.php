@@ -24,10 +24,7 @@ trait Filterable
 
             if (method_exists($query->getModel(), $scopeMethod)) {
                 $query->{Str::camel($key)}($value);
-                continue;
             }
-
-            $query->where($key, $value);
         }
 
         return $query;

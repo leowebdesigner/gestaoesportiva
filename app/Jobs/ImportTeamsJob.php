@@ -14,6 +14,10 @@ class ImportTeamsJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public int $tries = 3;
+    public int $backoff = 60;
+    public int $timeout = 3600;
+
     public function handle(BallDontLieService $service, TeamService $teamService): void
     {
         $page = 1;

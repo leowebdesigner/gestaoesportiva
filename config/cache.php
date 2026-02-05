@@ -114,4 +114,16 @@ return [
 
     'prefix' => env('CACHE_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-cache-'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Domain Cache TTLs (seconds)
+    |--------------------------------------------------------------------------
+    */
+
+    'ttl' => [
+        'players' => (int) env('CACHE_TTL_PLAYERS', 3600),
+        'teams'   => (int) env('CACHE_TTL_TEAMS', 86400),
+        'games'   => (int) env('CACHE_TTL_GAMES', 3600),
+    ],
+
 ];

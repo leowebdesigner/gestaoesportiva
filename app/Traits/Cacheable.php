@@ -7,23 +7,44 @@ use Illuminate\Support\Facades\Cache;
 
 trait Cacheable
 {
-    protected function getCacheKey(string $key): string
+    abstract protected function cachePrefix(): string;
+
+    abstract protected function cacheTtl(): int;
+
+    private int $cacheVersion = 0;
+
+    protected function cacheRemember(string $key, Closure $callback): mixed
     {
-        return sprintf('%s:%s', static::class, $key);
+        $version = $this->getCacheVersion();
+
+        return Cache::remember(
+            $this->cachePrefix() . "v{$version}:" . $key,
+            $this->cacheTtl(),
+            $callback
+        );
     }
 
-    protected function remember(string $key, $ttl, Closure $callback)
+    protected function cacheForget(string $key): bool
     {
-        return Cache::remember($this->getCacheKey($key), $ttl, $callback);
+        $version = $this->getCacheVersion();
+
+        return Cache::forget($this->cachePrefix() . "v{$version}:" . $key);
     }
 
-    protected function forget(string $key): bool
+    protected function cacheClearPrefix(): void
     {
-        return Cache::forget($this->getCacheKey($key));
+        $versionKey = $this->cachePrefix() . '_version';
+        $current = (int) Cache::get($versionKey, 0);
+        Cache::forever($versionKey, $current + 1);
     }
 
-    protected function flush(): bool
+    protected function cacheForgetItem(string $id): void
     {
-        return Cache::flush();
+        $this->cacheForget('id:' . $id);
+    }
+
+    private function getCacheVersion(): int
+    {
+        return (int) Cache::get($this->cachePrefix() . '_version', 0);
     }
 }

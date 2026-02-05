@@ -6,26 +6,35 @@ use App\Contracts\Repositories\TeamRepositoryInterface;
 use App\Contracts\Services\TeamServiceInterface;
 use App\Exceptions\NotFoundException;
 use App\Models\Team;
+use App\Traits\Cacheable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class TeamService implements TeamServiceInterface
 {
-    private const CACHE_TTL = 3600;
-    private const CACHE_PREFIX = 'teams:';
+    use Cacheable;
 
     public function __construct(
         private TeamRepositoryInterface $teamRepository
     ) {}
 
+    protected function cachePrefix(): string
+    {
+        return 'teams:';
+    }
+
+    protected function cacheTtl(): int
+    {
+        return (int) config('cache.ttl.teams', 86400);
+    }
+
     public function list(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $cacheKey = self::CACHE_PREFIX . 'list:' . md5(serialize($filters) . $perPage);
+        $hash = 'list:' . md5(serialize($filters) . $perPage);
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($filters, $perPage) {
+        return $this->cacheRemember($hash, function () use ($filters, $perPage) {
             return $this->teamRepository
                 ->filter($filters)
                 ->paginate($perPage);
@@ -34,10 +43,8 @@ class TeamService implements TeamServiceInterface
 
     public function find(string $id): Team
     {
-        $cacheKey = self::CACHE_PREFIX . 'id:' . $id;
-
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($id) {
-            $team = $this->teamRepository->findByUuid($id);
+        return $this->cacheRemember('id:' . $id, function () use ($id) {
+            $team = $this->teamRepository->findById($id);
 
             if (!$team) {
                 throw new NotFoundException('Time não encontrado.');
@@ -52,7 +59,7 @@ class TeamService implements TeamServiceInterface
         return DB::transaction(function () use ($data) {
             $team = $this->teamRepository->create($data);
 
-            $this->clearListCache();
+            $this->cacheClearPrefix();
 
             Log::info('Team created', ['team_id' => $team->id]);
 
@@ -63,7 +70,7 @@ class TeamService implements TeamServiceInterface
     public function update(string $id, array $data): Team
     {
         return DB::transaction(function () use ($id, $data) {
-            $team = $this->teamRepository->findByUuid($id);
+            $team = $this->teamRepository->findById($id);
 
             if (!$team) {
                 throw new NotFoundException('Time não encontrado.');
@@ -71,8 +78,8 @@ class TeamService implements TeamServiceInterface
 
             $team = $this->teamRepository->update($team->id, $data);
 
-            $this->clearTeamCache($id);
-            $this->clearListCache();
+            $this->cacheForgetItem($id);
+            $this->cacheClearPrefix();
 
             Log::info('Team updated', ['team_id' => $team->id]);
 
@@ -83,7 +90,7 @@ class TeamService implements TeamServiceInterface
     public function delete(string $id): bool
     {
         return DB::transaction(function () use ($id) {
-            $team = $this->teamRepository->findByUuid($id);
+            $team = $this->teamRepository->findById($id);
 
             if (!$team) {
                 throw new NotFoundException('Time não encontrado.');
@@ -91,8 +98,8 @@ class TeamService implements TeamServiceInterface
 
             $result = $this->teamRepository->delete($team->id);
 
-            $this->clearTeamCache($id);
-            $this->clearListCache();
+            $this->cacheForgetItem($id);
+            $this->cacheClearPrefix();
 
             Log::info('Team deleted', ['team_id' => $team->id]);
 
@@ -125,13 +132,4 @@ class TeamService implements TeamServiceInterface
         return $this->teamRepository->getByDivision($division);
     }
 
-    private function clearTeamCache(string $id): void
-    {
-        Cache::forget(self::CACHE_PREFIX . 'id:' . $id);
-    }
-
-    private function clearListCache(): void
-    {
-        Cache::flush();
-    }
 }

@@ -8,28 +8,37 @@ use App\Contracts\Services\GameServiceInterface;
 use App\Exceptions\BusinessException;
 use App\Exceptions\NotFoundException;
 use App\Models\Game;
+use App\Traits\Cacheable;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class GameService implements GameServiceInterface
 {
-    private const CACHE_TTL = 3600;
-    private const CACHE_PREFIX = 'games:';
+    use Cacheable;
 
     public function __construct(
         private GameRepositoryInterface $gameRepository,
         private TeamRepositoryInterface $teamRepository
     ) {}
 
+    protected function cachePrefix(): string
+    {
+        return 'games:';
+    }
+
+    protected function cacheTtl(): int
+    {
+        return (int) config('cache.ttl.games', 3600);
+    }
+
     public function list(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        $cacheKey = self::CACHE_PREFIX . 'list:' . md5(serialize($filters) . $perPage);
+        $hash = 'list:' . md5(serialize($filters) . $perPage);
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($filters, $perPage) {
+        return $this->cacheRemember($hash, function () use ($filters, $perPage) {
             return $this->gameRepository
                 ->with(['homeTeam', 'visitorTeam'])
                 ->filter($filters)
@@ -39,12 +48,10 @@ class GameService implements GameServiceInterface
 
     public function find(string $id): Game
     {
-        $cacheKey = self::CACHE_PREFIX . 'id:' . $id;
-
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($id) {
+        return $this->cacheRemember('id:' . $id, function () use ($id) {
             $game = $this->gameRepository
                 ->with(['homeTeam', 'visitorTeam'])
-                ->findByUuid($id);
+                ->findById($id);
 
             if (!$game) {
                 throw new NotFoundException('Jogo não encontrado.');
@@ -61,7 +68,7 @@ class GameService implements GameServiceInterface
 
             $game = $this->gameRepository->create($data);
 
-            $this->clearListCache();
+            $this->cacheClearPrefix();
 
             Log::info('Game created', ['game_id' => $game->id]);
 
@@ -72,7 +79,7 @@ class GameService implements GameServiceInterface
     public function update(string $id, array $data): Game
     {
         return DB::transaction(function () use ($id, $data) {
-            $game = $this->gameRepository->findByUuid($id);
+            $game = $this->gameRepository->findById($id);
 
             if (!$game) {
                 throw new NotFoundException('Jogo não encontrado.');
@@ -82,8 +89,8 @@ class GameService implements GameServiceInterface
 
             $game = $this->gameRepository->update($game->id, $data);
 
-            $this->clearGameCache($id);
-            $this->clearListCache();
+            $this->cacheForgetItem($id);
+            $this->cacheClearPrefix();
 
             Log::info('Game updated', ['game_id' => $game->id]);
 
@@ -94,7 +101,7 @@ class GameService implements GameServiceInterface
     public function delete(string $id): bool
     {
         return DB::transaction(function () use ($id) {
-            $game = $this->gameRepository->findByUuid($id);
+            $game = $this->gameRepository->findById($id);
 
             if (!$game) {
                 throw new NotFoundException('Jogo não encontrado.');
@@ -102,8 +109,8 @@ class GameService implements GameServiceInterface
 
             $result = $this->gameRepository->delete($game->id);
 
-            $this->clearGameCache($id);
-            $this->clearListCache();
+            $this->cacheForgetItem($id);
+            $this->cacheClearPrefix();
 
             Log::info('Game deleted', ['game_id' => $game->id]);
 
@@ -163,7 +170,7 @@ class GameService implements GameServiceInterface
     private function resolveTeamIds(array $data): array
     {
         if (isset($data['home_team_id'])) {
-            $homeTeam = $this->teamRepository->findByUuid($data['home_team_id']);
+            $homeTeam = $this->teamRepository->findById($data['home_team_id']);
             if (!$homeTeam) {
                 throw new BusinessException('Time mandante não encontrado.', 'HOME_TEAM_NOT_FOUND');
             }
@@ -171,7 +178,7 @@ class GameService implements GameServiceInterface
         }
 
         if (isset($data['visitor_team_id'])) {
-            $visitorTeam = $this->teamRepository->findByUuid($data['visitor_team_id']);
+            $visitorTeam = $this->teamRepository->findById($data['visitor_team_id']);
             if (!$visitorTeam) {
                 throw new BusinessException('Time visitante não encontrado.', 'VISITOR_TEAM_NOT_FOUND');
             }
@@ -181,13 +188,4 @@ class GameService implements GameServiceInterface
         return $data;
     }
 
-    private function clearGameCache(string $id): void
-    {
-        Cache::forget(self::CACHE_PREFIX . 'id:' . $id);
-    }
-
-    private function clearListCache(): void
-    {
-        Cache::flush();
-    }
 }
