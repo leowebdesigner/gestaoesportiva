@@ -3,11 +3,12 @@
 namespace App\External\BallDontLie;
 
 use App\External\BallDontLie\Contracts\BallDontLieClientInterface;
+use App\External\BallDontLie\Contracts\BallDontLieServiceInterface;
 use App\External\BallDontLie\DTOs\GameDTO;
 use App\External\BallDontLie\DTOs\PlayerDTO;
 use App\External\BallDontLie\DTOs\TeamDTO;
 
-class BallDontLieService
+class BallDontLieService implements BallDontLieServiceInterface
 {
     public function __construct(
         private BallDontLieClientInterface $client

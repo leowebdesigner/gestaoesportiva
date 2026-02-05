@@ -24,11 +24,19 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(ExceptionHandlerContract::class, Handler::class);
-        $this->app->bind(PlayerServiceInterface::class, PlayerService::class);
-        $this->app->bind(TeamServiceInterface::class, TeamService::class);
-        $this->app->bind(GameServiceInterface::class, GameService::class);
-        $this->app->bind(AuthServiceInterface::class, AuthService::class);
-        $this->app->bind(ImportServiceInterface::class, ImportService::class);
+
+        // Services (stateless, singleton for performance)
+        $this->app->singleton(PlayerServiceInterface::class, PlayerService::class);
+        $this->app->singleton(TeamServiceInterface::class, TeamService::class);
+        $this->app->singleton(GameServiceInterface::class, GameService::class);
+        $this->app->singleton(AuthServiceInterface::class, AuthService::class);
+        $this->app->singleton(ImportServiceInterface::class, ImportService::class);
+
+        // External Services
+        $this->app->singleton(
+            \App\External\BallDontLie\Contracts\BallDontLieServiceInterface::class,
+            \App\External\BallDontLie\BallDontLieService::class
+        );
     }
 
     /**
