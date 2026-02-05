@@ -31,16 +31,7 @@ class AuthService implements AuthServiceInterface
 
     public function login(array $credentials): array
     {
-        if (!Auth::attempt($credentials)) {
-            throw new UnauthorizedException(__('messages.auth.invalid_credentials'));
-        }
-
-        /** @var User $user */
-        $user = $this->userRepository->findByEmail($credentials['email']);
-
-        if (!$user) {
-            throw new UnauthorizedException(__('messages.auth.user_not_found'));
-        }
+        $user = $this->authenticateCredentials($credentials);
 
         $token = $this->issueToken($user);
 
@@ -88,20 +79,27 @@ class AuthService implements AuthServiceInterface
 
     public function loginForXAuth(array $credentials): array
     {
+        $user = $this->authenticateCredentials($credentials);
+
+        $xToken = $this->createXToken($user, 'external-login');
+
+        return ['user' => $user, 'x_token' => $xToken];
+    }
+
+    private function authenticateCredentials(array $credentials): User
+    {
         if (!Auth::attempt($credentials)) {
             throw new UnauthorizedException(__('messages.auth.invalid_credentials'));
         }
 
-        /** @var User $user */
+        /** @var User|null $user */
         $user = $this->userRepository->findByEmail($credentials['email']);
 
         if (!$user) {
             throw new UnauthorizedException(__('messages.auth.user_not_found'));
         }
 
-        $xToken = $this->createXToken($user, 'external-login');
-
-        return ['user' => $user, 'x_token' => $xToken];
+        return $user;
     }
 
     private function issueToken(User $user): string

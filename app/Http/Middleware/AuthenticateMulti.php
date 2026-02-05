@@ -2,8 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Auth\XAuthAccessToken;
-use App\Models\XAuthorizationToken;
+use App\Support\Auth\XAuthorizationAuthenticator;
 use Closure;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
@@ -12,6 +11,10 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AuthenticateMulti
 {
+    public function __construct(
+        private XAuthorizationAuthenticator $xAuthorizationAuthenticator
+    ) {}
+
     public function handle(Request $request, Closure $next): Response
     {
         // 1) Try X-Authorization header (external systems)
@@ -35,33 +38,15 @@ class AuthenticateMulti
     private function authenticateViaXAuth(Request $request, Closure $next): Response
     {
         $token = $request->header('X-Authorization');
-
-        $xToken = XAuthorizationToken::query()
-            ->where('token', hash('sha256', $token))
-            ->where(function ($query) {
-                $query->whereNull('expires_at')
-                    ->orWhere('expires_at', '>', now());
-            })
-            ->first();
-
-        if (!$xToken) {
-            throw new AuthenticationException(__('messages.errors.unauthorized'));
-        }
-
-        $xToken->update(['last_used_at' => now()]);
-
-        $user = $xToken->user;
-        Auth::setUser($user);
-        $user->withAccessToken(new XAuthAccessToken($xToken->abilities ?? ['*']));
+        $xToken = $this->xAuthorizationAuthenticator->authenticate($token);
+        $this->xAuthorizationAuthenticator->attachAuthenticatedUser($xToken);
+        $request->attributes->set('x_auth_token', $xToken);
 
         return $next($request);
     }
 
     private function authenticateViaSanctum(Request $request, Closure $next): Response
     {
-        $middleware = new \Laravel\Sanctum\Http\Middleware\CheckForAnyAbility();
-
-        // First authenticate via Sanctum guard
         return app(\Illuminate\Auth\Middleware\Authenticate::class)
             ->handle($request, $next, 'sanctum');
     }

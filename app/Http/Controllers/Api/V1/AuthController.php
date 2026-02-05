@@ -50,7 +50,12 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        $this->authService->logout($request->user());
+        if ($request->attributes->has('x_auth_token') && $request->hasHeader('X-Authorization')) {
+            $this->authService->revokeXToken($request->user(), $request->header('X-Authorization'));
+        } else {
+            $this->authService->logout($request->user());
+        }
+
         return $this->success(
             ['revoked' => true],
             __('messages.auth.logout_success')
