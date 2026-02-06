@@ -149,9 +149,10 @@ app/
 
 ## 🔐 Autenticação
 
-A API utiliza Laravel Sanctum (Bearer Token) com abilities granulares.
+A API suporta dois métodos de autenticação:
 
-Exemplo:
+### Bearer Token (Sanctum) - Usuários Internos
+Para usuários do sistema/frontend (`is_external=false`):
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/auth/login \
@@ -159,20 +160,29 @@ curl -X POST http://localhost:8000/api/v1/auth/login \
   -d '{"email":"admin@example.com","password":"password"}'
 ```
 
-Também há suporte ao header `X-Authorization` para integrações externas.
-
-Exemplos:
+### X-Authorization - Usuários Externos
+Para sistemas externos/APIs (`is_external=true`):
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/auth/x-login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@example.com","password":"password"}'
+  -d '{"email":"external@api.com","password":"external123"}'
 ```
 
+Uso do token:
 ```bash
 curl http://localhost:8000/api/v1/players \
   -H "X-Authorization: {x_token}"
 ```
+
+### Registro de Usuário Externo
+```bash
+curl -X POST http://localhost:8000/api/v1/auth/register-external \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Client","email":"client@api.com","password":"pass123","password_confirmation":"pass123"}'
+```
+
+> ⚠️ **Importante**: Usuários internos NÃO podem usar X-Login e usuários externos NÃO podem usar Login normal.
 
 ## 🧵 Filas e Horizon
 
@@ -191,12 +201,20 @@ http://localhost/horizon
 
 ## 👥 Perfis de Acesso
 
-Administrador:
+### Interno - Administrador
 - Email: `admin@example.com`
 - Senha: `password`
+- Autenticação: Bearer Token (Sanctum)
 - Permissões: CRUD completo
 
-Usuário:
+### Interno - Usuário
 - Email: `user@example.com`
 - Senha: `password`
+- Autenticação: Bearer Token (Sanctum)
 - Permissões: criar, ler e atualizar (sem delete)
+
+### Externo - API Client
+- Email: `external@api.com`
+- Senha: `external123`
+- Autenticação: X-Authorization
+- Permissões: mesmas do usuário interno
