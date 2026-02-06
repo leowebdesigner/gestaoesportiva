@@ -47,7 +47,7 @@ class MultiAuthXAuthorizationTest extends TestCase
 
         $logoutResponse->assertOk();
         $logoutResponse->assertJsonPath('message', 'Logout successful.');
-        $logoutResponse->assertJsonPath('data.revoked', true);
+        $logoutResponse->assertJsonPath('data.logged_out', true);
 
         $meResponse = $this->withHeaders([
             'X-Authorization' => $token,
