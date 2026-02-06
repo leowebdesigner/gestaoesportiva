@@ -57,7 +57,7 @@ make up
 make install
 ```
 
-### 5. Primeiro Active das filas
+### 5. Ative as filas após o install
 
 Rode o comando abaixo após o make install para que as sejam filas ativadas
 ```bash
