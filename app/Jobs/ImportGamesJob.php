@@ -18,16 +18,13 @@ class ImportGamesJob implements ShouldQueue
     public int $backoff = 60;
     public int $timeout = 3600;
 
-    public function __construct()
-    {
-        $this->onQueue('imports');
-    }
-
     public function __construct(
         private int $season,
         private ?int $teamId = null,
         private bool $playoffs = false
-    ) {}
+    ) {
+        $this->onQueue('imports');
+    }
 
     public function handle(
         BallDontLieServiceInterface $service,
