@@ -26,6 +26,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'is_external',
     ];
 
     /**
@@ -49,6 +50,7 @@ class User extends Authenticatable
             'role' => UserRole::class,
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_external' => 'boolean',
         ];
     }
 
@@ -65,5 +67,15 @@ class User extends Authenticatable
     public function xAuthorizationTokens(): HasMany
     {
         return $this->hasMany(XAuthorizationToken::class);
+    }
+
+    public function isExternal(): bool
+    {
+        return $this->is_external === true;
+    }
+
+    public function isInternal(): bool
+    {
+        return !$this->isExternal();
     }
 }

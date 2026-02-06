@@ -23,5 +23,13 @@ class UserSeeder extends Seeder
             'password' => 'password',
             'role' => UserRole::USER,
         ]);
+
+        User::create([
+            'name' => 'External API Client',
+            'email' => 'external@api.com',
+            'password' => 'external123',
+            'role' => UserRole::USER,
+            'is_external' => true,
+        ]);
     }
 }

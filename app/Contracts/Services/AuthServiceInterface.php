@@ -20,4 +20,8 @@ interface AuthServiceInterface
     public function createXToken(User $user, string $name = 'external'): XAuthorizationToken;
 
     public function revokeXToken(User $user, string $token): bool;
+
+    public function registerExternal(array $data): array;
+
+    public function setExternalStatus(User $user, bool $isExternal): User;
 }

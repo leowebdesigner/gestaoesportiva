@@ -15,6 +15,12 @@ return [
         'token_required' => 'Token is required.',
         'invalid_credentials' => 'Invalid credentials.',
         'user_not_found' => 'User not found.',
+        'external_user_must_use_x_login' => 'External users must authenticate via /auth/x-login.',
+        'internal_user_must_use_login' => 'Internal users must authenticate via /auth/login.',
+    ],
+    'user' => [
+        'update_external_forbidden' => 'Only administrators can change user external status.',
+        'not_found' => 'User not found.',
     ],
     'player' => [
         'deleted_success' => 'Player deleted successfully.',
