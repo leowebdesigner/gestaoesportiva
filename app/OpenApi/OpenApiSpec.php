@@ -48,12 +48,28 @@ use OpenApi\Attributes as OA;
     operationId: 'authXLogin',
     tags: ['Auth'],
     summary: 'Login (X-Authorization)',
-    description: 'Login for external/legacy systems. Returns X-Authorization token.',
+    description: 'Login for EXTERNAL users only (is_external=true). Returns X-Authorization token.',
     requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['email','password'], properties: [
-        new OA\Property(property: 'email', type: 'string', example: 'admin@example.com'),
-        new OA\Property(property: 'password', type: 'string', example: 'password')
+        new OA\Property(property: 'email', type: 'string', example: 'external@api.com'),
+        new OA\Property(property: 'password', type: 'string', example: 'external123')
     ])),
-    responses: [new OA\Response(response: 200, description: 'Success', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Success','data'=>['user'=>['id'=>'01...','email'=>'admin@example.com','role'=>'admin'],'x_token'=>'random60chartoken','expires_at'=>'2026-03-06 10:00:00'],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']])), new OA\Response(response: 401, description: 'Unauthorized', content: new OA\JsonContent(example: ['success'=>false,'message'=>'Invalid credentials.','errors'=>null,'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']]))]
+    responses: [new OA\Response(response: 200, description: 'Success', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Success','data'=>['user'=>['id'=>'01...','email'=>'external@api.com','role'=>'user'],'x_token'=>'random60chartoken','expires_at'=>'2026-03-06 10:00:00'],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']])), new OA\Response(response: 401, description: 'Unauthorized (internal user not allowed)', content: new OA\JsonContent(example: ['success'=>false,'message'=>'Internal users must authenticate via /auth/login.','errors'=>null,'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']]))]
+)]
+
+// ── Auth: Register External ────────────────────────────────────
+#[OA\Post(
+    path: '/api/v1/auth/register-external',
+    operationId: 'authRegisterExternal',
+    tags: ['Auth'],
+    summary: 'Register External User',
+    description: 'Public registration for external API clients. Creates user with is_external=true and returns X-Authorization token.',
+    requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['name','email','password','password_confirmation'], properties: [
+        new OA\Property(property: 'name', type: 'string', example: 'External Client'),
+        new OA\Property(property: 'email', type: 'string', example: 'client@api.com'),
+        new OA\Property(property: 'password', type: 'string', example: 'password123'),
+        new OA\Property(property: 'password_confirmation', type: 'string', example: 'password123')
+    ])),
+    responses: [new OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Created successfully','data'=>['user'=>['id'=>'01...','name'=>'External Client','email'=>'client@api.com','role'=>'user','is_external'=>true],'x_token'=>'random60chartoken','expires_at'=>'2026-03-06 10:00:00'],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']])), new OA\Response(response: 422, description: 'Validation error')]
 )]
 
 // ── Auth: Logout ────────────────────────────────────────────────
@@ -63,11 +79,30 @@ use OpenApi\Attributes as OA;
 ])]
 
 // ── Auth: Me ────────────────────────────────────────────────────
-#[OA\Get(path: '/api/v1/auth/me', operationId: 'authMe', tags: ['Auth'], security: [['sanctum' => []], ['xAuthorization' => []]], summary: 'Current authenticated user', responses: [new OA\Response(response: 200, description: 'Success', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Success','data'=>['id'=>'01...','name'=>'Administrator','email'=>'admin@example.com','role'=>'admin'],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']]))])]
+#[OA\Get(path: '/api/v1/auth/me', operationId: 'authMe', tags: ['Auth'], security: [['sanctum' => []], ['xAuthorization' => []]], summary: 'Current authenticated user', responses: [new OA\Response(response: 200, description: 'Success', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Success','data'=>['id'=>'01...','name'=>'Administrator','email'=>'admin@example.com','role'=>'admin','is_external'=>false],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']]))])]
 
 // ── Auth: X-Token Management (Bearer only) ─────────────────────
 #[OA\Post(path: '/api/v1/auth/x-token', operationId: 'authCreateXToken', tags: ['Auth'], security: [['sanctum' => []]], summary: 'Create X-Authorization token', description: 'Requires Bearer token. Generates a new X-Authorization token for external integrations.', requestBody: new OA\RequestBody(required: false, content: new OA\JsonContent(properties: [new OA\Property(property: 'name', type: 'string', example: 'integration')])) , responses: [new OA\Response(response: 201, description: 'Created', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Created successfully','data'=>['token'=>'plain_x_token','expires_at'=>'2026-03-06 10:00:00'],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']]))])]
 #[OA\Delete(path: '/api/v1/auth/x-token', operationId: 'authRevokeXToken', tags: ['Auth'], security: [['sanctum' => []]], summary: 'Revoke X-Authorization token', description: 'Requires Bearer token. Revokes an existing X-Authorization token.', requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['token'], properties: [new OA\Property(property: 'token', type: 'string', example: 'plain_x_token')])) , responses: [new OA\Response(response: 200, description: 'Success', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Success','data'=>['revoked'=>true],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']])), new OA\Response(response: 422, description: 'Validation error')])]
+
+// ── Admin: Toggle User External Status ─────────────────────────
+#[OA\Patch(
+    path: '/api/v1/admin/users/{user}/toggle-external',
+    operationId: 'adminToggleUserExternal',
+    tags: ['Auth'],
+    security: [['sanctum' => []]],
+    summary: 'Toggle user external status (Admin only)',
+    description: 'Only administrators can change user external status. Revokes all user tokens when changed.',
+    parameters: [new OA\Parameter(name: 'user', in: 'path', required: true, description: 'User ULID', schema: new OA\Schema(type: 'string', example: '01JKEXAMPLE00000000000000'))],
+    requestBody: new OA\RequestBody(required: true, content: new OA\JsonContent(required: ['is_external'], properties: [
+        new OA\Property(property: 'is_external', type: 'boolean', example: true, description: 'true = external (X-Auth), false = internal (Sanctum)')
+    ])),
+    responses: [
+        new OA\Response(response: 200, description: 'Success', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Success','data'=>['user'=>['id'=>'01...','email'=>'user@example.com','is_external'=>true],'message'=>'User is now external (use X-Authorization).'],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0']])),
+        new OA\Response(response: 403, description: 'Forbidden - Only administrators'),
+        new OA\Response(response: 404, description: 'User not found')
+    ]
+)]
 
 // ── Players ─────────────────────────────────────────────────────
 #[OA\Get(path: '/api/v1/players', operationId: 'playersIndex', tags: ['Players'], security: [['sanctum' => []], ['xAuthorization' => []]], summary: 'List players', description: 'Ability: players:read OR players:*', parameters: [new OA\Parameter(name: 'per_page', in: 'query', schema: new OA\Schema(type: 'integer', example: 15)), new OA\Parameter(name: 'search', in: 'query', schema: new OA\Schema(type: 'string', example: 'LeBron')), new OA\Parameter(name: 'position', in: 'query', schema: new OA\Schema(type: 'string', example: 'F')), new OA\Parameter(name: 'team_id', in: 'query', schema: new OA\Schema(type: 'string', example: '01...')), new OA\Parameter(name: 'is_active', in: 'query', schema: new OA\Schema(type: 'boolean', example: true))], responses: [new OA\Response(response: 200, description: 'Success', content: new OA\JsonContent(example: ['success'=>true,'message'=>'Success','data'=>[['id'=>'01...','first_name'=>'LeBron','last_name'=>'James','position'=>'F','team_id'=>'01...']],'meta'=>['timestamp'=>'2026-02-05 10:00:00','version'=>'1.0','pagination'=>['total'=>1,'per_page'=>15,'current_page'=>1,'last_page'=>1]]]))])]
