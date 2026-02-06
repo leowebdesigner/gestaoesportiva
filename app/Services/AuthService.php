@@ -34,6 +34,10 @@ class AuthService implements AuthServiceInterface
     {
         $user = $this->authenticateCredentials($credentials);
 
+        if ($user->isExternal()) {
+            throw new UnauthorizedException(__('messages.auth.external_user_must_use_x_login'));
+        }
+
         $token = $this->issueToken($user);
 
         return ['user' => $user, 'token' => $token];
@@ -82,6 +86,10 @@ class AuthService implements AuthServiceInterface
     {
         $user = $this->authenticateCredentials($credentials);
 
+        if ($user->isInternal()) {
+            throw new UnauthorizedException(__('messages.auth.internal_user_must_use_login'));
+        }
+
         $xToken = $this->createXToken($user, 'external-login');
 
         return ['user' => $user, 'x_token' => $xToken];
@@ -111,5 +119,29 @@ class AuthService implements AuthServiceInterface
             $role === UserRole::ADMIN ? 'admin-token' : 'api-token',
             $role->abilities()
         )->plainTextToken;
+    }
+
+    public function registerExternal(array $data): array
+    {
+        $data['role'] = UserRole::USER->value;
+        $data['is_external'] = true;
+
+        $user = $this->userRepository->create($data);
+
+        $xToken = $this->createXToken($user, 'external-registration');
+
+        return ['user' => $user, 'x_token' => $xToken];
+    }
+
+    public function setExternalStatus(User $user, bool $isExternal): User
+    {
+        $user->is_external = $isExternal;
+        $user->save();
+
+        // Revoke all tokens when changing external status
+        $user->tokens()->delete();
+        $user->xAuthorizationTokens()->delete();
+
+        return $user->fresh();
     }
 }

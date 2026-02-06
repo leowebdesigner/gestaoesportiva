@@ -83,4 +83,29 @@ class AuthController extends Controller
 
         return $this->success(['revoked' => $revoked]);
     }
+
+    public function registerExternal(RegisterRequest $request): JsonResponse
+    {
+        $result = $this->authService->registerExternal($request->validated());
+        return $this->created([
+            'user' => new UserResource($result['user']),
+            'x_token' => $result['x_token']->plain_text_token,
+            'expires_at' => $result['x_token']->expires_at?->toDateTimeString(),
+        ]);
+    }
+
+    public function setExternalStatus(Request $request, \App\Models\User $user): JsonResponse
+    {
+        $this->authorize('setExternalStatus', $user);
+
+        $isExternal = $request->boolean('is_external');
+        $updatedUser = $this->authService->setExternalStatus($user, $isExternal);
+
+        return $this->success([
+            'user' => new UserResource($updatedUser),
+            'message' => $isExternal
+                ? 'User is now external (use X-Authorization).'
+                : 'User is now internal (use Bearer Token).',
+        ]);
+    }
 }

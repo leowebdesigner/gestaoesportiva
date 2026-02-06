@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "dd1461b7-da7f-42ed-90b1-2b8bd43236c3",
     "name": "Basketball API - Laravel 12",
-    "description": "Collection completa para testar manualmente todos os endpoints da Basketball API.\n\nDual Auth:\n- Bearer Token (Sanctum): para usuarios do frontend proprio\n- X-Authorization: para sistemas externos/legados\n\nAmbos os metodos acessam TODAS as rotas protegidas.",
+    "description": "Collection completa para testar manualmente todos os endpoints da Basketball API.\n\nDual Auth:\n- Bearer Token (Sanctum): para usuarios INTERNOS do frontend (is_external=false)\n- X-Authorization: para sistemas EXTERNOS/APIs (is_external=true)\n\nIMPORTANTE: Usuarios internos NAO podem usar X-Login e usuarios externos NAO podem usar Login normal.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "19168571"
   },
@@ -262,7 +262,7 @@
     },
     {
       "name": "Auth (X-Authorization - External)",
-      "description": "Autenticacao via X-Authorization para sistemas externos/legados.\nExecute primeiro o 'X-Login' para obter o x_token, depois use as demais rotas.",
+      "description": "Autenticacao via X-Authorization para sistemas externos (is_external=true).\nExecute primeiro o 'X-Login' com usuario externo (external@api.com) para obter o x_token.",
       "auth": {
         "type": "apikey",
         "apikey": [
@@ -318,7 +318,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"password\"\n}"
+              "raw": "{\n  \"email\": \"external@api.com\",\n  \"external123\": \"password\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/x-login",
