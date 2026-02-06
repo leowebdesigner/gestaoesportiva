@@ -3,19 +3,16 @@
 namespace App\External\BallDontLie;
 
 use App\Exceptions\ExternalApiException;
+use App\Exceptions\RateLimitExceededException;
 use App\External\BallDontLie\Contracts\BallDontLieClientInterface;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Redis;
 
-class BallDontLieClient implements BallDontLieClientInterface
+
+final class BallDontLieClient implements BallDontLieClientInterface
 {
-    private int $requestCount = 0;
-    private float $windowStart;
-
-    public function __construct()
-    {
-        $this->windowStart = microtime(true);
-    }
+    private const THROTTLE_KEY = 'balldontlie-api';
 
     public function getTeams(int $page = 1, int $perPage = 100): array
     {
@@ -37,70 +34,51 @@ class BallDontLieClient implements BallDontLieClientInterface
 
     private function get(string $uri, array $query = []): array
     {
-        $this->respectRateLimit();
+        $limit = (int) config('balldontlie.rate_limit.requests', 30);
+        $window = (int) config('balldontlie.rate_limit.window', 60);
 
-        $maxRetries = (int) config('balldontlie.retry.times', 3);
-        $baseSleepMs = (int) config('balldontlie.retry.sleep', 1000);
-        $rateWindow = (int) config('balldontlie.rate_limit.window', 60);
+        return Redis::throttle(self::THROTTLE_KEY)
+            ->allow($limit)
+            ->every($window)
+            ->then(
+                fn (): array => $this->executeRequest($uri, $query),
+                fn (): never => throw new RateLimitExceededException(
+                    retryAfterSeconds: $window,
+                    message: 'BallDontLie API rate limit exceeded'
+                )
+            );
+    }
 
-        $attempts = 0;
+    private function executeRequest(string $uri, array $query): array
+    {
+        /** @var Response $response */
+        $response = Http::timeout((int) config('balldontlie.timeout', 30))
+            ->withHeaders([
+                'Authorization' => (string) config('balldontlie.api_key'),
+            ])
+            ->get($this->baseUrl() . $uri, $query);
 
-        do {
-            $this->respectRateLimit();
+        if ($response->status() === 429) {
+            $retryAfter = (int) ($response->header('Retry-After') ?: config('balldontlie.rate_limit.window', 60));
 
-            /** @var Response $response */
-            $response = Http::timeout(config('balldontlie.timeout', 30))
-                ->withHeaders([
-                    'Authorization' => config('balldontlie.api_key'),
-                ])
-                ->get($this->baseUrl() . $uri, $query);
+            throw new RateLimitExceededException(
+                retryAfterSeconds: $retryAfter,
+                message: 'BallDontLie API returned 429 Too Many Requests'
+            );
+        }
 
-            if ($response->status() === 429) {
-                $attempts++;
-                $sleepMs = max($baseSleepMs, $rateWindow * 1000);
-                usleep($sleepMs * 1000);
-                continue;
-            }
+        if (!$response->successful()) {
+            throw new ExternalApiException(
+                'Error in BallDontLie: ' . $response->status(),
+                $response->status()
+            );
+        }
 
-            if (!$response->successful()) {
-                throw new ExternalApiException(
-                    'Error in BallDontLie: ' . $response->status(),
-                    $response->status()
-                );
-            }
-
-            return $response->json();
-        } while ($attempts < $maxRetries);
-
-        throw new ExternalApiException('Error in BallDontLie: 429', 429);
+        return $response->json();
     }
 
     private function baseUrl(): string
     {
         return rtrim((string) config('balldontlie.base_url'), '/');
-    }
-
-    private function respectRateLimit(): void
-    {
-        $limit = (int) config('balldontlie.rate_limit.requests', 30);
-        $window = (int) config('balldontlie.rate_limit.window', 60);
-
-        $elapsed = microtime(true) - $this->windowStart;
-
-        if ($elapsed >= $window) {
-            $this->requestCount = 0;
-            $this->windowStart = microtime(true);
-        }
-
-        if ($this->requestCount >= $limit) {
-            $sleepTime = $window - $elapsed;
-            if ($sleepTime > 0) {
-                sleep((int) ceil($sleepTime));
-            }
-            $this->requestCount = 0;
-            $this->windowStart = microtime(true);
-        }
-
-        $this->requestCount++;
     }
 }

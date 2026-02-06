@@ -13,7 +13,6 @@ return [
     ],
     'retry' => [
         'times' => 3,
-        'sleep' => 1000,
     ],
     'timeout' => 30,
 ];
