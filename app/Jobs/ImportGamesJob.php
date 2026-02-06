@@ -14,8 +14,6 @@ class ImportGamesJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public string $queue = 'imports';
-
     public int $tries = 3;
     public int $backoff = 60;
     public int $timeout = 3600;
@@ -24,7 +22,9 @@ class ImportGamesJob implements ShouldQueue
         private int $season,
         private ?int $teamId = null,
         private bool $playoffs = false
-    ) {}
+    ) {
+        $this->onQueue('imports');
+    }
 
     public function handle(
         BallDontLieServiceInterface $service,
