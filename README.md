@@ -57,6 +57,13 @@ make up
 make install
 ```
 
+### 5. Primeiro Active das filas
+
+Rode o comando abaixo após o make install para que as sejam filas ativadas
+```bash
+make restart
+```
+
 ## ▶️ Executando a Aplicação
 
 - API: `http://localhost:8000`
