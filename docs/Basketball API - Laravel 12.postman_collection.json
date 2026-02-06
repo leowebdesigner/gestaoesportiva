@@ -277,7 +277,7 @@
               "raw": "{\n  \"is_external\": true\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/v1/admin/users/1/toggle-external",
+              "raw": "{{base_url}}/api/v1/admin/users/01JKEXAMPLE00000000000000/toggle-external",
               "host": [
                 "{{base_url}}"
               ],
@@ -286,7 +286,7 @@
                 "v1",
                 "admin",
                 "users",
-                "1",
+                "01JKEXAMPLE00000000000000",
                 "toggle-external"
               ]
             },
@@ -391,7 +391,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"external@api.com\",\n  \"external123\": \"password\"\n}"
+              "raw": "{\n  \"email\": \"external@api.com\",\n  \"password\": \"external123\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/v1/auth/x-login",
